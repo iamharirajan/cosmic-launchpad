@@ -115,7 +115,7 @@ export function HomeSections() {
             <div className="lg:pt-6">
               <p className="eyebrow text-signal">Engineer's log</p>
               <blockquote className="mt-4 font-display text-4xl font-bold uppercase leading-tight md:text-5xl">
-                “Design changes are almost unavoidable — the job is to make the hardware ready for them.”
+                “Design changes are almost unavoidable.”
               </blockquote>
               <p className="mt-6 text-muted-foreground">
                 Hands-on across the full cycle: SolidWorks design, fabrication, assembly and live static fire testing.
