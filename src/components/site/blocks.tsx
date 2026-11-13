@@ -76,7 +76,7 @@ export function MissionVisual({
             src={mission.image}
             alt={mission.title}
             loading={eager ? "eager" : "lazy"}
-            className="relative w-full max-w-[560px] object-contain"
+            className="relative max-h-full max-w-[560px] object-contain"
           />
           <p className="eyebrow relative max-w-[560px] text-center text-muted-foreground">{mission.details[0]}</p>
         </div>

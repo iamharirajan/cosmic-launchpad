@@ -13,6 +13,7 @@ import testBedVerticalPoster from "@/assets/media/test-bed-vertical-poster.jpg.a
 import testBedHorizontalFire from "@/assets/media/test-bed-horizontal-fire.mp4.asset.json";
 import testBedHorizontalPoster from "@/assets/media/test-bed-horizontal-poster.jpg.asset.json";
 import cubesatPrototypes from "@/assets/media/cubesat-prototype-models.jpg.asset.json";
+import solarCase from "@/assets/media/solar-case-cad.jpg.asset.json";
 import resume from "@/assets/media/resume.pdf.asset.json";
 
 export const profile = {
@@ -45,6 +46,7 @@ export const media = {
   testBedHorizontalVideo: testBedHorizontalFire.url,
   testBedHorizontalPoster: testBedHorizontalPoster.url,
   cubesatPrototypes: cubesatPrototypes.url,
+  solarCase: solarCase.url,
   nebula: nebulaImg,
   earthNight: earthNightImg,
 };
@@ -133,6 +135,8 @@ export const missions: Mission[] = [
       "Designed a solar-powered mobile case using CATIA V5 Generative Shape Design (surface modeling) as part of the Naan Mudhalvan Program.",
     details: ["CATIA V5 Generative Shape Design (surface modeling)", "Part of the Naan Mudhalvan Program"],
     tags: ["CATIA V5", "Surface Modeling", "Naan Mudhalvan"],
+    image: solarCase.url,
+    imageContain: true,
     status: "Complete",
   },
 ];
@@ -174,5 +178,6 @@ export const gallery = [
   { src: testBedVertical.url, caption: "Vertical test bed — hot fire", credit: "Space Zone Aerospace" },
   { src: testBedHorizontal.url, caption: "Horizontal test bed — hot fire", credit: "Space Zone Aerospace" },
   { src: cubesatPrototypes.url, caption: "CubeSat & NanoSat prototype models", credit: "Fit & assembly check" },
+  { src: solarCase.url, caption: "Solar-powered mobile case — CATIA V5 model", credit: "Naan Mudhalvan Program" },
   { src: interviewPoster.url, caption: "Mission briefing from the design office", credit: "Space Zone Aerospace" },
 ];

@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { FileDown, Instagram, Linkedin, Mail, MapPin, Youtube } from "lucide-react";
+import { Instagram, Linkedin, Mail, MapPin, Youtube } from "lucide-react";
 
 import { Container, PageHero } from "@/components/site/blocks";
 import { media, profile } from "@/data/profile";
