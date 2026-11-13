@@ -14,6 +14,26 @@ const TOWER_W = 1.1;
 const TOWER_TOP = 5.6;
 const COAST_Z = -70;
 
+// [x, z, width, height, depth] — service buildings around the pad perimeter
+const PAD_BUILDINGS: [number, number, number, number, number][] = [
+  [-9, 9, 2.4, 0.9, 1.6],
+  [-6.5, 12, 1.4, 0.6, 1],
+  [8, 12, 3, 0.8, 1.4],
+  [12, 3, 1.2, 1.1, 1.2],
+  [-14, -2, 2, 0.7, 1.4],
+  [6, -13, 2.6, 1, 1.8],
+  [-7, -14, 1.6, 0.6, 1.2],
+  [16, 14, 1.8, 0.7, 1.1],
+];
+const LIGHT_MASTS: [number, number][] = [
+  [-10, 6],
+  [9.5, 6.5],
+  [-10.5, -8],
+  [10, -9],
+  [3, 15],
+  [-3.5, 15.5],
+];
+
 function canvasTexture(size: number, draw: (g: CanvasRenderingContext2D, s: number) => void, repeat: number) {
   const c = document.createElement("canvas");
   c.width = c.height = size;
@@ -37,28 +57,56 @@ const grassTexture = () =>
   canvasTexture(
     512,
     (g, s) => {
-      g.fillStyle = "#5f6b3a";
+      g.fillStyle = "#3d5226";
       g.fillRect(0, 0, s, s);
-      for (let i = 0; i < 90; i++) {
-        const r = 20 + Math.random() * 70;
+      // low scrub, palmetto clumps and sandy patches
+      for (let i = 0; i < 160; i++) {
+        const r = 10 + Math.random() * 60;
         const x = Math.random() * s, y = Math.random() * s;
         const grd = g.createRadialGradient(x, y, 0, x, y, r);
-        const tone = ["rgba(130,128,72,0.35)", "rgba(62,78,40,0.4)", "rgba(150,140,95,0.25)", "rgba(70,90,70,0.3)"][i % 4]!;
+        const tone = ["rgba(28,44,20,0.55)", "rgba(84,98,48,0.4)", "rgba(52,70,34,0.5)", "rgba(150,138,98,0.22)"][i % 4]!;
         grd.addColorStop(0, tone);
         grd.addColorStop(1, "rgba(0,0,0,0)");
         g.fillStyle = grd;
         g.fillRect(x - r, y - r, r * 2, r * 2);
       }
-      speckle(g, s, 30000, ["rgba(40,52,26,0.35)", "rgba(150,150,95,0.25)", "rgba(95,110,55,0.3)"], 2);
+      for (let i = 0; i < 2600; i++) {
+        const x = Math.random() * s, y = Math.random() * s, r = 1 + Math.random() * 3.5;
+        g.fillStyle = ["rgba(20,32,14,0.55)", "rgba(70,92,40,0.45)", "rgba(96,112,58,0.35)"][i % 3]!;
+        g.beginPath();
+        g.arc(x, y, r, 0, Math.PI * 2);
+        g.fill();
+      }
+      speckle(g, s, 26000, ["rgba(22,34,16,0.35)", "rgba(120,128,76,0.22)", "rgba(80,100,50,0.3)"], 2);
     },
     90,
+  );
+
+const sandTexture = () =>
+  canvasTexture(
+    256,
+    (g, s) => {
+      g.fillStyle = "#cbb88f";
+      g.fillRect(0, 0, s, s);
+      for (let i = 0; i < 30; i++) {
+        const r = 15 + Math.random() * 50;
+        const x = Math.random() * s, y = Math.random() * s;
+        const grd = g.createRadialGradient(x, y, 0, x, y, r);
+        grd.addColorStop(0, ["rgba(225,212,180,0.35)", "rgba(160,140,100,0.25)"][i % 2]!);
+        grd.addColorStop(1, "rgba(0,0,0,0)");
+        g.fillStyle = grd;
+        g.fillRect(x - r, y - r, r * 2, r * 2);
+      }
+      speckle(g, s, 14000, ["rgba(120,104,76,0.25)", "rgba(240,232,210,0.3)", "rgba(150,130,96,0.2)"], 2);
+    },
+    6,
   );
 
 const concreteTexture = () =>
   canvasTexture(
     256,
     (g, s) => {
-      g.fillStyle = "#a5a29b";
+      g.fillStyle = "#c4bdab";
       g.fillRect(0, 0, s, s);
       speckle(g, s, 14000, ["rgba(80,78,72,0.22)", "rgba(200,198,190,0.25)", "rgba(120,110,95,0.15)"], 2);
       for (let i = 0; i < 6; i++) {
@@ -132,7 +180,7 @@ function mergeBeams(beams: Beam[]) {
   return mergeGeometries(geos)!;
 }
 
-/** Fixed service structure: square rust-orange lattice tower with platforms, hammerhead crane and lightning mast. */
+/** Fixed service structure: square grey steel lattice tower with platforms, hammerhead crane and lightning mast. */
 function buildTower() {
   const steel: Beam[] = [];
   const decks: Beam[] = [];
@@ -169,6 +217,11 @@ function buildTower() {
   decks.push({ p: [cx, TOWER_TOP + 0.05, 0], s: [w + 0.2, 0.1, w + 0.2] });
   steel.push({ p: [cx + 0.3, TOWER_TOP + 0.35, 0], s: [2.2, 0.16, 0.16] });
   steel.push({ p: [cx - 0.1, TOWER_TOP + 0.2, 0], s: [0.3, 0.3, 0.3] });
+  // equipment rooms on a few levels (gives the FSS its cluttered silhouette)
+  for (const y of [y0 + 1.3, y0 + 2.6, y0 + 3.9, y0 + 5.2])
+    decks.push({ p: [cx - 0.15, y + 0.22, half * 0.4], s: [w * 0.6, 0.4, w * 0.5] });
+  for (const y of [y0 + 0.9, y0 + 2.2, y0 + 3.5, y0 + 4.8])
+    decks.push({ p: [cx + half + 0.18, y, -half + 0.2], s: [0.36, 0.05, 0.5] });
   // elevator shaft & cable trays
   decks.push({ p: [cx - half - 0.12, y0 + h / 2, -0.25], s: [0.22, h, 0.3] });
   return { steel: mergeBeams(steel), decks: mergeBeams(decks) };
@@ -198,8 +251,9 @@ export function LaunchPad() {
       grass: grassTexture(),
       concrete: concreteTexture(),
       gravel: gravelTexture(),
-      mlp: panelTexture("#8d8e8f", "rgba(40,40,40,0.35)"),
-      rss: panelTexture("#c9c8c3", "rgba(70,70,70,0.35)"),
+      sand: sandTexture(),
+      mlp: panelTexture("#7d7f82", "rgba(30,30,30,0.4)"),
+      rss: panelTexture("#a8abae", "rgba(50,52,55,0.45)"),
     }),
     [],
   );
@@ -229,8 +283,9 @@ export function LaunchPad() {
     if (goxArm.current) goxArm.current.rotation.y = -1.35 * smooth(0.04, 0.075, p);
   });
 
-  const rust = <meshStandardMaterial color="#b9562a" roughness={0.62} metalness={0.35} />;
-  const grey = <meshStandardMaterial color="#8f9296" roughness={0.6} metalness={0.4} />;
+  const rust = <meshStandardMaterial color="#9ea2a6" roughness={0.55} metalness={0.55} />;
+  const grey = <meshStandardMaterial color="#7c8085" roughness={0.6} metalness={0.45} />;
+  const white = <meshStandardMaterial color="#e4e2dc" roughness={0.7} />;
 
   return (
     <group>
@@ -245,7 +300,7 @@ export function LaunchPad() {
       </mesh>
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, GROUND_Y - 0.05, COAST_Z - 1000]}>
         <planeGeometry args={[2800, 2000]} />
-        <meshStandardMaterial color="#2c5d80" roughness={0.18} metalness={0.1} />
+        <meshStandardMaterial color="#1d4f7c" roughness={0.22} metalness={0.15} />
       </mesh>
 
       {/* Crawlerway */}
@@ -257,6 +312,42 @@ export function LaunchPad() {
           </mesh>
         ))}
       </group>
+
+      {/* Sandy pad apron (the bright clearing around 39A) */}
+      <mesh rotation={[-Math.PI / 2, 0, Math.PI / 8]} position={[0, GROUND_Y + 0.015, 0]} receiveShadow>
+        <circleGeometry args={[24, 8]} />
+        <meshStandardMaterial map={tex.sand} roughness={1} />
+      </mesh>
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[3, GROUND_Y + 0.02, 22]} receiveShadow>
+        <planeGeometry args={[30, 7]} />
+        <meshStandardMaterial map={tex.sand} roughness={1} />
+      </mesh>
+
+      {/* Perimeter buildings, pipe runs and floodlight masts */}
+      {PAD_BUILDINGS.map(([x, z, w, h, d], i) => (
+        <mesh key={`b${i}`} position={[x, GROUND_Y + h / 2, z]} castShadow receiveShadow>
+          <boxGeometry args={[w, h, d]} />
+          {i % 3 === 0 ? grey : white}
+        </mesh>
+      ))}
+      {LIGHT_MASTS.map(([x, z], i) => (
+        <group key={`m${i}`} position={[x, GROUND_Y, z]}>
+          <mesh position={[0, 2.4, 0]} castShadow>
+            <cylinderGeometry args={[0.035, 0.06, 4.8, 6]} />
+            {grey}
+          </mesh>
+          <mesh position={[0, 4.85, 0]}>
+            <boxGeometry args={[0.35, 0.18, 0.08]} />
+            {grey}
+          </mesh>
+        </group>
+      ))}
+      {[-1, 1].map((k) => (
+        <mesh key={`pipe${k}`} position={[k * 4.5, GROUND_Y + 0.12, 10]} rotation={[0, k * 0.3, 0]}>
+          <boxGeometry args={[0.18, 0.18, 12]} />
+          {grey}
+        </mesh>
+      ))}
 
       {/* Raised hardstand (octagonal) with flame trench */}
       <mesh position={[0, (HARDSTAND_Y + GROUND_Y) / 2, 0]} rotation={[0, Math.PI / 8, 0]} receiveShadow castShadow>

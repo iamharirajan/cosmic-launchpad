@@ -194,7 +194,7 @@ export function ShuttleStack({ tankRef, srbLRef, srbRRef, layout, srbThrust, ssm
   }, [layout, stack]);
 
   const srbFlame = (
-    <Flame position={[0, 0.03, 0]} length={6} radius={stack.srbNozzleRadius * 1.25} intensityRef={srbThrust} />
+    <Flame position={[0, 0.03, 0]} length={7} radius={stack.srbNozzleRadius * 1.3} intensityRef={srbThrust} core="#fffdf0" mid="#ffe2a0" tail="#ffa040" gain={1.25} />
   );
 
   return (
