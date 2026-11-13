@@ -1,3 +1,4 @@
+import logo from "@/assets/media/harirajan-logo.jpg.asset.json";
 import { Link } from "@tanstack/react-router";
 import { Menu, X } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -13,19 +14,7 @@ const nav = [
 ] as const;
 
 export function Insignia({ className }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 48 48" className={className} aria-hidden="true">
-      <circle cx="24" cy="24" r="23" className="fill-agency" />
-      <circle cx="14" cy="15" r="1" className="fill-foreground" />
-      <circle cx="35" cy="12" r="0.8" className="fill-foreground" />
-      <circle cx="37" cy="33" r="1" className="fill-foreground" />
-      <ellipse cx="24" cy="26" rx="21" ry="6.5" transform="rotate(-18 24 26)" className="fill-none stroke-foreground" strokeWidth="1.4" />
-      <path d="M6 33 C 18 26, 30 18, 44 9 L 41 15 C 30 21, 18 28, 8 36 Z" className="fill-signal" />
-      <text x="24" y="28.5" textAnchor="middle" className="fill-foreground" style={{ font: "800 13px 'Barlow Condensed', sans-serif", letterSpacing: "0.5px" }}>
-        HM
-      </text>
-    </svg>
-  );
+  return <img src={logo.url} alt="" aria-hidden="true" className={cn("rounded-full object-cover ring-1 ring-line", className)} />;
 }
 
 export function SiteHeader() {
