@@ -5,7 +5,7 @@ import * as THREE from "three";
 const COUNT = 3600;
 // Feel constants
 const SPAWN_RATE = 1250; // particles per second at full thrust
-const BUOYANCY = 0.55;
+const BUOYANCY = 0.95;
 const DRAG = 1.1;
 
 const vertex = /* glsl */ `
@@ -154,7 +154,7 @@ export function Smoke({ emittersRef, rateRef }: SmokeProps) {
       let vx = vel[j]!;
       let vy = vel[j + 1]!;
       let vz = vel[j + 2]!;
-      // Deflection: most exhaust runs down the flame trench (along z) and billows out of both ends;
+      // Deflection: most exhaust runs down the flame trench (along x) and billows out of both ends;
       // a share splashes across the launch platform deck.
       const onDeck = i % 3 === 0;
       const floor = onDeck ? 0.08 : -0.85;
@@ -166,10 +166,10 @@ export function Smoke({ emittersRef, rateRef }: SmokeProps) {
           vz = (vz / len) * down * 1.1 + (Math.random() - 0.5) * 3;
         } else {
           const side = i % 2 === 0 ? 1 : -1;
-          vz = side * (down * 2.1 + 3 + Math.random() * 3);
-          vx = (Math.random() - 0.5) * 3.5;
+          vx = side * (down * 2.1 + 3 + Math.random() * 3);
+          vz = (Math.random() - 0.5) * 3.5;
         }
-        vy = 0.4 + Math.random() * 0.6;
+        vy = 0.8 + Math.random() * 1.4;
         y = floor;
       }
       const drag = Math.exp(-DRAG * dt);
@@ -177,7 +177,8 @@ export function Smoke({ emittersRef, rateRef }: SmokeProps) {
       // hot steam rises harder once it has slowed down, building tall billows
       vy = vy * drag + BUOYANCY * dt * (1 + Math.min(a, 4) * 0.25);
       vz *= drag;
-      x += vx * dt + 0.15 * dt; // light wind
+      x += vx * dt;
+      z += 0.15 * dt; // light onshore wind
       y += vy * dt;
       z += vz * dt;
       pos[j] = x;
@@ -189,7 +190,7 @@ export function Smoke({ emittersRef, rateRef }: SmokeProps) {
       const t = a / l;
       size[i] = base[i]! * (0.7 + Math.min(a, 8) * 1.6);
       alpha[i] = Math.min(1, a * 3) * (1 - t * t) * 0.92;
-      heat[i] = Math.max(0, 1 - a * 1.1);
+      heat[i] = Math.max(0, 1 - a * 2.4) * 0.8;
     }
 
     for (const name of ["position", "aSize", "aAlpha", "aHeat"]) {

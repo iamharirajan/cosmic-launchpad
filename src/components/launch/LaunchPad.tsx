@@ -355,7 +355,7 @@ export function LaunchPad() {
         <meshStandardMaterial map={tex.concrete} roughness={0.95} />
       </mesh>
       <mesh position={[0, HARDSTAND_Y + 0.005, 0]}>
-        <boxGeometry args={[1.5, 0.01, 12.5]} />
+        <boxGeometry args={[12.5, 0.01, 1.5]} />
         <meshStandardMaterial color="#1a1918" roughness={1} />
       </mesh>
 
@@ -482,7 +482,7 @@ const skyFragment = /* glsl */ `
     float h = clamp(d.y, -0.2, 1.0);
     vec3 col = mix(uHorizon, uZenith, pow(smoothstep(-0.05, 0.9, h), 0.6));
     float sun = max(dot(d, uSun), 0.0);
-    col += vec3(1.0, 0.85, 0.65) * (pow(sun, 16.0) * 0.12 + pow(sun, 900.0) * 2.0);
+    col += vec3(1.0, 0.85, 0.65) * (pow(sun, 64.0) * 0.08 + pow(sun, 2000.0) * 1.5);
     vec3 g = d * 900.0;
     vec3 cell = floor(g);
     float star = step(0.9985, hash(cell)) * smoothstep(0.45, 0.1, length(fract(g) - 0.5));
@@ -503,7 +503,7 @@ export function createSkyMaterial() {
     uniforms: {
       uZenith: { value: new THREE.Color() },
       uHorizon: { value: new THREE.Color() },
-      uSun: { value: new THREE.Vector3(-0.8, 0.18, -0.55).normalize() },
+      uSun: { value: new THREE.Vector3(-0.8, 0.55, -0.55).normalize() },
       uStars: { value: 0 },
     },
   });

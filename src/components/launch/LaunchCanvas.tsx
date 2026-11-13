@@ -133,7 +133,7 @@ function Scene({ onReady }: { onReady: () => void }) {
 
       if (engineLight.current) {
         engineLight.current.position.set(0, -1.2, 0).applyMatrix4(st.matrixWorld);
-        engineLight.current.intensity = (srbThrust.current * 60 + ssmeOn * 8) * (0.85 + Math.random() * 0.3);
+        engineLight.current.intensity = (srbThrust.current * 32 + ssmeOn * 6) * (0.85 + Math.random() * 0.3);
       }
     }
 

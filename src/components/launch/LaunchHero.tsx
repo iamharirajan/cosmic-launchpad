@@ -139,8 +139,7 @@ export function LaunchHero() {
               style={{ opacity: o, transform: `translateY(${(1 - o) * 20}px)` }}
             >
               <div className="max-w-md border-l-2 border-signal bg-background/55 py-5 pl-5 pr-6 backdrop-blur-sm">
-                <p className="eyebrow text-signal">{c.stage}</p>
-                <h2 className="display-md mt-2">{c.title}</h2>
+                <h2 className="display-md">{c.title}</h2>
                 <p className="mt-3 text-foreground/85">{c.body}</p>
               </div>
             </div>
