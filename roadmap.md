@@ -12,3 +12,4 @@
 - [x] Rearrange the home page to follow the live site's order (launch + about-me intro, then intro video, projects, experience, skills, education, achievements, YouTube, contact)
 - [ ] Make the shuttle, launch pad and surroundings more realistic, like https://youtu.be/OnoNITE-CLc
 - [x] Remove the "SRB Separation" and "MECO · ET Sep" stage labels from the scrolling captions (keep the caption text)
+- [x] Restore the earlier, simpler opening launch screen (name, one line, two buttons)
