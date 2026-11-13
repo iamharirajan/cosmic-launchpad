@@ -13,3 +13,6 @@
 - [x] Make the shuttle, launch pad and surroundings more realistic, like https://youtu.be/OnoNITE-CLc
 - [x] Remove the "SRB Separation" and "MECO · ET Sep" stage labels from the scrolling captions (keep the caption text)
 - [x] Restore the earlier, simpler opening launch screen (name, one line, two buttons)
+- [ ] Realism pass on the launch scene: flame glow + lighting/haze/grading, denser smoke + ignition steam, busier tower & pad detail, moving ocean, marsh, trees and roads
+- [ ] Launch scene adapts quality per device (phones lighter, laptops/PCs full) and runs smoothly everywhere
+- [ ] Check every page layout on phone, laptop and PC sizes (incl. header wrapping at ~850px)
