@@ -8,3 +8,4 @@
 - [ ] Add the solar-powered mobile case photo (CATIA V5 screenshot) to MISSION-004
 - [ ] Add a video like the one on https://iamharirajan.github.io/ (use it as reference)
 - [ ] Remove the résumé (download links/buttons) from the site
+- [ ] Remove the caption text shown while scrolling through ignition / max Q in the home launch section
