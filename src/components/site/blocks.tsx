@@ -70,7 +70,7 @@ export function MissionVisual({
   if (mission.image) {
     if (fit === "contain")
       return (
-        <div className={cn("absolute inset-0 bg-surface", className)} aria-hidden>
+        <div className={cn("absolute inset-0 bg-surface", className)}>
           <div className="grid-lines absolute inset-0 opacity-40" />
           <img
             src={mission.image}
