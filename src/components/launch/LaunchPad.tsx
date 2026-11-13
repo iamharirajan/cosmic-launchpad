@@ -283,7 +283,7 @@ export function LaunchPad() {
     if (goxArm.current) goxArm.current.rotation.y = -1.35 * smooth(0.04, 0.075, p);
   });
 
-  const rust = <meshStandardMaterial color="#9ea2a6" roughness={0.55} metalness={0.55} />;
+  const steel = <meshStandardMaterial color="#9ea2a6" roughness={0.55} metalness={0.55} />;
   const grey = <meshStandardMaterial color="#7c8085" roughness={0.6} metalness={0.45} />;
   const white = <meshStandardMaterial color="#e4e2dc" roughness={0.7} />;
 
@@ -369,7 +369,7 @@ export function LaunchPad() {
 
       {/* Fixed service structure */}
       <mesh geometry={tower.steel} castShadow>
-        {rust}
+        {steel}
       </mesh>
       <mesh geometry={tower.decks} castShadow receiveShadow>
         {grey}
@@ -403,11 +403,11 @@ export function LaunchPad() {
       <group ref={goxArm} position={[TOWER_X + TOWER_W / 2, 4.62, 0]}>
         <mesh position={[0.9, 0, 0]} castShadow>
           <boxGeometry args={[1.8, 0.07, 0.07]} />
-          {rust}
+          {steel}
         </mesh>
         <mesh position={[0.9, 0.13, 0]} castShadow>
           <boxGeometry args={[1.8, 0.03, 0.03]} />
-          {rust}
+          {steel}
         </mesh>
         <mesh position={[1.9, 0.16, 0]} castShadow>
           <sphereGeometry args={[0.3, 24, 12, 0, Math.PI * 2, 0, Math.PI / 2]} />
@@ -482,7 +482,7 @@ const skyFragment = /* glsl */ `
     float h = clamp(d.y, -0.2, 1.0);
     vec3 col = mix(uHorizon, uZenith, pow(smoothstep(-0.05, 0.9, h), 0.6));
     float sun = max(dot(d, uSun), 0.0);
-    col += vec3(1.0, 0.75, 0.45) * (pow(sun, 8.0) * 0.35 + pow(sun, 600.0) * 3.0);
+    col += vec3(1.0, 0.85, 0.65) * (pow(sun, 16.0) * 0.12 + pow(sun, 900.0) * 2.0);
     vec3 g = d * 900.0;
     vec3 cell = floor(g);
     float star = step(0.9985, hash(cell)) * smoothstep(0.45, 0.1, length(fract(g) - 0.5));

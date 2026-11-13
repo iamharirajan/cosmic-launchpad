@@ -25,9 +25,9 @@ const SCROLL_DAMP = 4.5;
 const PAD_SUN = new THREE.Vector3(-0.55, 0.32, 0.78).normalize();
 
 const SKY = {
-  zenithLow: new THREE.Color("#1d58b4"),
+  zenithLow: new THREE.Color("#2f62a6"),
   zenithHigh: new THREE.Color("#02040c"),
-  horizonLow: new THREE.Color("#aac4df"),
+  horizonLow: new THREE.Color("#9fb9d2"),
   horizonHigh: new THREE.Color("#1d3d78"),
 };
 
@@ -60,7 +60,7 @@ function Scene({ onReady }: { onReady: () => void }) {
   ]);
 
   const skyMat = useMemo(createSkyMaterial, []);
-  const fog = useMemo(() => new THREE.Fog("#aac4df", 40, 600), []);
+  const fog = useMemo(() => new THREE.Fog("#9fb9d2", 40, 600), []);
 
   useEffect(() => {
     scene.fog = fog;
@@ -172,8 +172,8 @@ function Scene({ onReady }: { onReady: () => void }) {
     if (!inSpace) {
       const intro = smooth(0, LIFTOFF_AT, p);
       const pull = smooth(0, 1, a);
-      const dist = 16 - intro * 4 + pull * 14;
-      const camY = sp.y * 0.92 + 2.0 - pull * 3 + (1 - intro) * 1.2;
+      const dist = 19 - intro * 4 + pull * 14;
+      const camY = sp.y * 0.92 + 2.6 - pull * 3 + (1 - intro) * 1.4;
       const ang = 0.62 - pull * 0.25;
       camera.position.set(sp.x + Math.sin(ang) * dist + px, camY + py, Math.cos(ang) * dist);
       const shake = srbThrust.current * (1 - a) * 0.05;
