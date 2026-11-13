@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { ArrowUpRight, Pause, Play } from "lucide-react";
+import { ArrowUpRight, Lock, Pause, Play } from "lucide-react";
 import { useRef, useState, type ReactNode } from "react";
 
 import type { Mission } from "@/data/profile";
@@ -55,6 +55,32 @@ export function PageHero({
   );
 }
 
+/** Mission photo, or a "imagery withheld" panel when there is no real photo. */
+export function MissionVisual({ mission, className, eager = false }: { mission: Mission; className?: string; eager?: boolean }) {
+  if (mission.image)
+    return (
+      <img
+        src={mission.image}
+        alt={mission.title}
+        loading={eager ? "eager" : "lazy"}
+        width={1600}
+        height={1000}
+        className={cn("absolute inset-0 h-full w-full object-cover", className)}
+      />
+    );
+  return (
+    <div className={cn("absolute inset-0 bg-surface", className)} aria-hidden>
+      <div className="grid-lines absolute inset-0 opacity-60" />
+      <span className="absolute right-6 top-4 font-display text-[9rem] font-extrabold leading-none text-foreground/10 md:text-[12rem]">
+        {mission.code.slice(-3)}
+      </span>
+      <span className="absolute left-6 top-6 inline-flex items-center gap-2 border border-line px-3 py-1 font-mono text-[0.6rem] uppercase tracking-[0.2em] text-muted-foreground">
+        <Lock className="h-3 w-3" /> Imagery withheld · confidential
+      </span>
+    </div>
+  );
+}
+
 export function MissionCard({ mission, large = false }: { mission: Mission; large?: boolean }) {
   return (
     <Link
@@ -62,14 +88,7 @@ export function MissionCard({ mission, large = false }: { mission: Mission; larg
       hash={mission.code.toLowerCase()}
       className={cn("group relative block overflow-hidden bg-surface", large ? "min-h-[520px]" : "min-h-[380px]")}
     >
-      <img
-        src={mission.image}
-        alt={mission.title}
-        loading="lazy"
-        width={1600}
-        height={1000}
-        className="hover-zoom absolute inset-0 h-full w-full object-cover"
-      />
+      <MissionVisual mission={mission} className="hover-zoom" />
       <div className="absolute inset-0 bg-scrim" />
       <div className="absolute inset-x-0 bottom-0 p-6 md:p-8">
         <p className="eyebrow text-foreground/80">

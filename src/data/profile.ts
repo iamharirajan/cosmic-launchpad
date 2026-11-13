@@ -1,7 +1,3 @@
-import nozzleImg from "@/assets/images/nozzle-hardware.jpg";
-import staticFireImg from "@/assets/images/static-fire.jpg";
-import cubesatImg from "@/assets/images/cubesat-prototype.jpg";
-import solarCaseImg from "@/assets/images/solar-case.jpg";
 import nebulaImg from "@/assets/images/deep-space-nebula.jpg";
 import earthNightImg from "@/assets/images/earth-night-orbit.jpg";
 import rhumiLaunch from "@/assets/media/rhumi-twin-launch.jpg.asset.json";
@@ -46,7 +42,8 @@ export type Mission = {
   summary: string;
   details: string[];
   tags: string[];
-  image: string;
+  /** Real photo only — leave empty rather than use an illustration. */
+  image?: string;
   status: string;
 };
 
@@ -71,7 +68,6 @@ export const missions: Mission[] = [
       "Developed both the vertical and horizontal test bed structures for rocket engine testing, and supported live static fire operations.",
     details: ["Vertical and horizontal test beds for engine testing", "Supported live static fire operations"],
     tags: ["Structures", "Test Systems", "SolidWorks"],
-    image: staticFireImg,
     status: "Operational",
   },
   {
@@ -82,7 +78,6 @@ export const missions: Mission[] = [
       "3D printed structural frames to validate fit and assembly, cutting iteration time before machined production.",
     details: ["3D printed structural frames", "Fit and assembly validated before machined production"],
     tags: ["Ultimaker Cura", "PrusaSlicer", "3D Printing"],
-    image: cubesatImg,
     status: "Complete",
   },
   {
@@ -93,7 +88,6 @@ export const missions: Mission[] = [
       "Designed a solar-powered mobile case using CATIA V5 Generative Shape Design (surface modeling) as part of the Naan Mudhalvan Program.",
     details: ["CATIA V5 Generative Shape Design (surface modeling)", "Part of the Naan Mudhalvan Program"],
     tags: ["CATIA V5", "Surface Modeling", "Naan Mudhalvan"],
-    image: solarCaseImg,
     status: "Complete",
   },
 ];
@@ -131,10 +125,6 @@ export const certifications = [
 
 export const gallery = [
   { src: rhumiLaunch.url, caption: "Rhumi twin rocket, off the pad", credit: "Space Zone Aerospace" },
-  { src: staticFireImg, caption: "Static fire on a horizontal test bed", credit: "Illustration" },
-  { src: nozzleImg, caption: "Propulsion hardware close-up", credit: "Illustration" },
-  { src: cubesatImg, caption: "3D-printed CubeSat frame prototype", credit: "Illustration" },
-  { src: earthNightImg, caption: "Southern India at night from orbit", credit: "Illustration" },
-  { src: nebulaImg, caption: "Star-forming pillars in deep space", credit: "Illustration" },
-  { src: solarCaseImg, caption: "Solar-powered mobile case concept", credit: "Illustration" },
+  { src: liftoffPoster.url, caption: "Rhumi twin liftoff — launch footage", credit: "Space Zone Aerospace" },
+  { src: interviewPoster.url, caption: "Mission briefing from the design office", credit: "Space Zone Aerospace" },
 ];
