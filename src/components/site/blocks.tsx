@@ -90,6 +90,7 @@ export function MissionVisual({
         className={cn("absolute inset-0 h-full w-full object-cover", className)}
       />
     );
+  }
   return (
     <div className={cn("absolute inset-0 bg-surface", className)} aria-hidden>
       <div className="grid-lines absolute inset-0 opacity-60" />
