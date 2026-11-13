@@ -14,7 +14,6 @@ import testBedHorizontalFire from "@/assets/media/test-bed-horizontal-fire.mp4.a
 import testBedHorizontalPoster from "@/assets/media/test-bed-horizontal-poster.jpg.asset.json";
 import cubesatPrototypes from "@/assets/media/cubesat-prototype-models.jpg.asset.json";
 import solarCase from "@/assets/media/solar-case-cad.jpg.asset.json";
-import resume from "@/assets/media/resume.pdf.asset.json";
 
 export const profile = {
   name: "Harirajan M",
@@ -26,7 +25,6 @@ export const profile = {
   github: "https://iamharirajan.github.io",
   youtube: "https://www.youtube.com/@nebulaspacetime",
   instagram: "https://www.instagram.com/nebulaspacetime",
-  resumeUrl: resume.url,
   summary:
     "Junior Design Engineer at Space Zone Aerospace, designing rocket and missile hardware from concept to hot-fire. Designed the Rhumi twin rocket, successfully launched by the company, and developed the vertical and horizontal test beds.",
   cycle: "Hands-on across the full cycle: SolidWorks design, fabrication, assembly, and live static fire testing.",
