@@ -76,7 +76,7 @@ export function MissionVisual({
             src={mission.image}
             alt={mission.title}
             loading={eager ? "eager" : "lazy"}
-            className="relative max-h-full max-w-[560px] border border-line object-contain"
+            className="relative w-full max-w-[560px] border border-line object-contain"
           />
           {(mission.images ?? []).map((src) => (
             <img
@@ -84,10 +84,9 @@ export function MissionVisual({
               src={src}
               alt=""
               loading="lazy"
-              className="relative max-h-full max-w-[560px] border border-line object-contain"
+              className="relative w-full max-w-[560px] border border-line object-contain"
             />
           ))}
-          <p className="eyebrow relative max-w-[560px] text-center text-foreground/70">{mission.details[0]}</p>
         </div>
       );
     return (

@@ -13,7 +13,7 @@ import testBedVerticalPoster from "@/assets/media/test-bed-vertical-poster.jpg.a
 import testBedHorizontalFire from "@/assets/media/test-bed-horizontal-fire.mp4.asset.json";
 import testBedHorizontalPoster from "@/assets/media/test-bed-horizontal-poster.jpg.asset.json";
 import cubesatPrototypes from "@/assets/media/cubesat-prototype-models.jpg.asset.json";
-import solarCase from "@/assets/media/solar-case-cad.jpg.asset.json";
+import solarCase from "@/assets/media/solar-case-cad-wide.jpg.asset.json";
 import solarCaseMultiview from "@/assets/media/solar-case-multiview.jpg.asset.json";
 
 export const profile = {
