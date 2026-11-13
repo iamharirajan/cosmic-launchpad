@@ -2,6 +2,8 @@ import nozzleImg from "@/assets/images/nozzle-hardware.jpg";
 import staticFireImg from "@/assets/images/static-fire.jpg";
 import cubesatImg from "@/assets/images/cubesat-prototype.jpg";
 import solarCaseImg from "@/assets/images/solar-case.jpg";
+import nebulaImg from "@/assets/images/deep-space-nebula.jpg";
+import earthNightImg from "@/assets/images/earth-night-orbit.jpg";
 import rhumiLaunch from "@/assets/media/rhumi-twin-launch.jpg.asset.json";
 import earthLimb from "@/assets/media/earth-limb.jpg.asset.json";
 import liftoffVideo from "@/assets/media/rhumi-twin-liftoff.mp4.asset.json";
@@ -22,7 +24,8 @@ export const profile = {
   instagram: "https://www.instagram.com/nebulaspacetime",
   resumeUrl: resume.url,
   summary:
-    "Junior Design Engineer at Space Zone Aerospace, designing rocket and missile hardware from concept to hot-fire. Designed the Rhumi Twin rocket, successfully launched by the company, and developed the vertical and horizontal test beds.",
+    "Junior Design Engineer at Space Zone Aerospace, designing rocket and missile hardware from concept to hot-fire. Designed the Rhumi twin rocket, successfully launched by the company, and developed the vertical and horizontal test beds.",
+  cycle: "Hands-on across the full cycle: SolidWorks design, fabrication, assembly, and live static fire testing.",
 };
 
 export const media = {
@@ -32,6 +35,8 @@ export const media = {
   liftoffPoster: liftoffPoster.url,
   interviewVideo: interviewVideo.url,
   interviewPoster: interviewPoster.url,
+  nebula: nebulaImg,
+  earthNight: earthNightImg,
 };
 
 export type Mission = {
@@ -50,93 +55,65 @@ export const missions: Mission[] = [
     code: "MISSION-001",
     category: "Launch Vehicle",
     title: "Rhumi Twin Rocket",
-    summary:
-      "Designed the Rhumi Twin rocket — successfully launched by Space Zone Aerospace from its coastal launch site.",
+    summary: "Designed the Rhumi twin rocket at Space Zone Aerospace — successfully launched by the company.",
     details: [
-      "Flight hardware designed in SolidWorks from concept to launch",
-      "Production-ready drawings with tolerances and material callouts",
-      "Supported integration, rail loading and launch-day operations",
+      "Launch footage of the Rhumi twin rocket, the vehicle I designed at Space Zone Aerospace and which the company launched successfully.",
     ],
-    tags: ["SolidWorks", "Launch Vehicle", "Flight Proven"],
+    tags: ["Launched", "SolidWorks", "Space Zone Aerospace"],
     image: rhumiLaunch.url,
     status: "Launched",
   },
   {
     code: "MISSION-002",
-    category: "Test Systems",
+    category: "Structures",
     title: "Vertical & Horizontal Test Beds",
     summary:
-      "Developed both vertical and horizontal test bed structures that hold rocket engines through live static fire testing.",
-    details: [
-      "Structures engineered to withstand engine thrust loads",
-      "Present at live static fire operations end-to-end",
-      "Engine assembly and disassembly on propulsion hardware",
-    ],
-    tags: ["Structures", "Static Fire", "SolidWorks"],
+      "Developed both the vertical and horizontal test bed structures for rocket engine testing, and supported live static fire operations.",
+    details: ["Vertical and horizontal test beds for engine testing", "Supported live static fire operations"],
+    tags: ["Structures", "Test Systems", "SolidWorks"],
     image: staticFireImg,
     status: "Operational",
   },
   {
     code: "MISSION-003",
-    category: "Propulsion",
-    title: "Flight-Critical Components",
-    summary:
-      "Nozzles, injectors, pyrotechnic valves, fins, airframe sections and fuel grains — full design packages for manufacturing release.",
-    details: [
-      "Mechanical drawings to aerospace standards",
-      "DFM assessments before manufacturing release",
-      "Fuel grain fabrication for hybrid and solid motors",
-    ],
-    tags: ["Nozzles", "Injectors", "Pyro Valves", "DFM"],
-    image: nozzleImg,
-    status: "Ongoing",
-  },
-  {
-    code: "MISSION-004",
     category: "Satellite",
-    title: "CubeSat & NanoSat Prototypes",
+    title: "CubeSat & NanoSat Prototype Models",
     summary:
-      "3D-printed structural frames to validate fit and assembly, cutting iteration time before machined production.",
-    details: [
-      "FDM prototypes sliced in Ultimaker Cura and PrusaSlicer",
-      "Fit and assembly checks before machining",
-      "Faster design iteration on satellite structures",
-    ],
-    tags: ["3D Printing", "Cura", "PrusaSlicer"],
+      "3D printed structural frames to validate fit and assembly, cutting iteration time before machined production.",
+    details: ["3D printed structural frames", "Fit and assembly validated before machined production"],
+    tags: ["Ultimaker Cura", "PrusaSlicer", "3D Printing"],
     image: cubesatImg,
     status: "Complete",
   },
   {
-    code: "MISSION-005",
+    code: "MISSION-004",
     category: "Innovation",
     title: "Solar-Powered Mobile Case",
     summary:
-      "A PV-integrated mobile case designed with CATIA V5 Generative Shape Design, selected in the state-level Naan Mudhalvan program.",
-    details: [
-      "Surface modelling in CATIA V5 GSD",
-      "Selected at state level — Naan Mudhalvan program",
-      "Concept to presentation-ready model",
-    ],
-    tags: ["CATIA V5", "Surface Modelling", "State Selected"],
+      "Designed a solar-powered mobile case using CATIA V5 Generative Shape Design (surface modeling) as part of the Naan Mudhalvan Program.",
+    details: ["CATIA V5 Generative Shape Design (surface modeling)", "Part of the Naan Mudhalvan Program"],
+    tags: ["CATIA V5", "Surface Modeling", "Naan Mudhalvan"],
     image: solarCaseImg,
     status: "Complete",
   },
 ];
 
 export const experience = [
-  "Design nozzles, injectors, pyrotechnic valves, fins, airframe sections, fuel grains and other flight-critical rocket components in SolidWorks.",
+  "Design nozzles, injectors, pyrotechnic valves, fins, airframe sections, fuel grains, and other flight-critical rocket components in SolidWorks, delivering production-ready drawings with tolerances and material callouts.",
   "Produce mechanical drawings to aerospace standards and run DFM assessments before manufacturing release.",
-  "Support live static fire operations and engine assembly/disassembly — first-hand understanding of fit, function and failure modes.",
+  "Support live static fire operations and engine assembly/disassembly, building first-hand understanding of fit, function, and failure modes.",
   "Fabricate fuel grains and 3D print prototype components and CubeSat/NanoSat models to validate fit before machining.",
-  "Own the procurement workflow — specifications, BOMs and vendor coordination for materials and parts.",
+  "Own procurement workflow — specifications, BOMs, and vendor coordination for materials and parts.",
 ];
 
 export const skills = [
-  { group: "CAD", items: ["SolidWorks", "CATIA V5", "Parts & Assemblies", "Drawings", "Surface Modelling"] },
-  { group: "Aerospace Hardware", items: ["Nozzles", "Injectors", "Pyro Valves", "Fins", "Airframes", "Fuel Grains"] },
-  { group: "Manufacturing", items: ["3D Printing", "Ultimaker Cura", "PrusaSlicer", "DFM", "Engine Assembly"] },
-  { group: "Operations", items: ["Procurement", "BOMs", "Vendor Coordination", "Static Fire Support"] },
-  { group: "Other", items: ["C Programming", "Technical Drawing", "CFD (learning)"] },
+  { group: "CAD Software", items: ["SolidWorks", "CATIA V5", "Parts", "Assemblies", "Drawings"] },
+  { group: "Flight Hardware Design", items: ["Nozzles", "Injectors", "Pyro Valves", "Fins", "Airframes", "Fuel Grains"] },
+  {
+    group: "Manufacturing & Prototyping",
+    items: ["3D Printing", "Ultimaker Cura", "PrusaSlicer", "Fuel Grain Fabrication", "Engine Assembly/Disassembly", "DFM"],
+  },
+  { group: "Other", items: ["Procurement & Vendor Coordination", "BOMs", "Mechanical Drawings", "C Programming"] },
 ];
 
 export const education = [
@@ -146,16 +123,18 @@ export const education = [
 ];
 
 export const certifications = [
-  { title: "IELTS — B2 Level", note: "Upper Intermediate · April 2024" },
+  { title: "Rhumi Twin Rocket", note: "Designed by me — successfully launched by Space Zone Aerospace" },
+  { title: "Vertical & Horizontal Test Beds", note: "Developed for rocket engine testing" },
+  { title: "IELTS — B2 Level", note: "Upper Intermediate, April 2024" },
   { title: "NCC C Certificate", note: "National Cadet Corps — leadership & national service" },
-  { title: "Naan Mudhalvan — State Level", note: "Solar-powered mobile case selected statewide" },
 ];
 
 export const gallery = [
-  { src: rhumiLaunch.url, caption: "Rhumi Twin clears the launch rail", credit: "Space Zone Aerospace" },
+  { src: rhumiLaunch.url, caption: "Rhumi twin rocket, off the pad", credit: "Space Zone Aerospace" },
   { src: staticFireImg, caption: "Static fire on a horizontal test bed", credit: "Illustration" },
   { src: nozzleImg, caption: "Propulsion hardware close-up", credit: "Illustration" },
   { src: cubesatImg, caption: "3D-printed CubeSat frame prototype", credit: "Illustration" },
-  { src: earthLimb.url, caption: "Earth's limb at orbital sunrise", credit: "Archive" },
+  { src: earthNightImg, caption: "Southern India at night from orbit", credit: "Illustration" },
+  { src: nebulaImg, caption: "Star-forming pillars in deep space", credit: "Illustration" },
   { src: solarCaseImg, caption: "Solar-powered mobile case concept", credit: "Illustration" },
 ];

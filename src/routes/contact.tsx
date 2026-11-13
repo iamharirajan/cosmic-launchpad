@@ -34,7 +34,7 @@ function ContactPage() {
         eyebrow="Open channel"
         title={<>Contact mission control</>}
         intro="Open to aerospace design roles, collaborations and propulsion projects. The fastest way to reach me is email."
-        image={media.earthLimb}
+        image={media.nebula}
       />
       <section className="py-24">
         <Container>

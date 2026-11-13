@@ -26,7 +26,7 @@ function AboutPage() {
         eyebrow="Flight log · Experience"
         title={<>Flight log</>}
         intro={profile.summary}
-        image={media.earthLimb}
+        image={media.earthNight}
       />
 
       <section className="py-24">

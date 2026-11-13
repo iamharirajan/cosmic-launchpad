@@ -6,10 +6,10 @@ import { media, missions, profile } from "@/data/profile";
 import { Container, MissionCard, SectionHeading, VideoPlayer } from "./blocks";
 
 const stats = [
-  { value: "01", label: "Rocket designed & launched", note: "Rhumi Twin" },
-  { value: "02", label: "Engine test beds", note: "Vertical + horizontal" },
-  { value: "06+", label: "Flight-critical component types", note: "Nozzles to fuel grains" },
-  { value: "B.E.", label: "Mechanical engineering", note: "Anna University · 2024" },
+  { value: "Designed", label: "Rhumi twin rocket", note: "Launched by Space Zone Aerospace" },
+  { value: "Developed", label: "Vertical & horizontal test beds", note: "For engine testing" },
+  { value: "Tools", label: "SolidWorks, CATIA V5", note: "3D printing" },
+  { value: "Base", label: "Madurai, India", note: "Tamil Nadu" },
 ];
 
 export function HomeSections() {
@@ -23,7 +23,7 @@ export function HomeSections() {
           <div className="relative min-h-[60vh] lg:min-h-[86vh]">
             <img
               src={media.rhumiLaunch}
-              alt="The Rhumi Twin rocket leaving its launch rail at the coastal launch site"
+              alt="The Rhumi twin rocket leaving its launch rail"
               loading="lazy"
               className="absolute inset-0 h-full w-full object-cover"
             />
@@ -34,12 +34,12 @@ export function HomeSections() {
           <div className="flex items-center bg-surface">
             <div className="px-5 py-16 md:px-14 lg:py-24">
               <p className="eyebrow"><span className="text-signal">MISSION-001</span> · Launch vehicle</p>
-              <h2 className="display-lg mt-4">Mission<br />Rhumi Twin</h2>
+              <h2 className="display-lg mt-4">Rhumi twin rocket,<br />off the pad.</h2>
               <p className="mt-6 max-w-lg text-lg text-foreground/85">
-                {rhumi.summary} I took the vehicle from SolidWorks models to production drawings, and stood on the beach as it cleared the rail.
+                {rhumi.summary}
               </p>
               <ul className="mt-8 space-y-3 border-t border-line pt-6">
-                {rhumi.details.map((d) => (
+                {[profile.cycle].map((d) => (
                   <li key={d} className="flex gap-3 text-foreground/85">
                     <span className="mt-2 h-1.5 w-1.5 shrink-0 bg-signal" />
                     {d}
@@ -64,7 +64,7 @@ export function HomeSections() {
         <Container className="grid grid-cols-2 lg:grid-cols-4">
           {stats.map((s, i) => (
             <div key={s.label} className={i > 0 ? "border-l border-line px-5 py-10 md:px-8" : "px-0 py-10 md:pr-8"}>
-              <p className="font-display text-6xl font-extrabold text-foreground md:text-7xl">{s.value}</p>
+              <p className="font-display text-4xl font-extrabold uppercase text-foreground md:text-5xl">{s.value}</p>
               <p className="mt-3 font-display text-lg font-semibold uppercase">{s.label}</p>
               <p className="eyebrow mt-1">{s.note}</p>
             </div>
@@ -73,8 +73,10 @@ export function HomeSections() {
       </section>
 
       {/* Missions */}
-      <section className="py-24">
-        <Container>
+      <section className="relative overflow-hidden py-24">
+        <img src={media.nebula} alt="" loading="lazy" width={1920} height={1088} className="absolute inset-0 h-full w-full object-cover opacity-50" />
+        <div className="absolute inset-0 bg-scrim-side" />
+        <Container className="relative">
           <SectionHeading
             index="01"
             eyebrow="Mission manifest"
@@ -103,14 +105,14 @@ export function HomeSections() {
               src={media.liftoffVideo}
               poster={media.liftoffPoster}
               title="Rhumi Twin liftoff"
-              caption="Launch-day footage from the coastal launch site."
+              caption="Launch footage of the Rhumi twin rocket, the vehicle I designed at Space Zone Aerospace."
               autoPlay
             />
             <VideoPlayer
               src={media.interviewVideo}
               poster={media.interviewPoster}
-              title="Inside the design office"
-              caption="Harirajan on designing fins, nozzles, airframes and other critical components."
+              title="Mission briefing / Intro"
+              caption="A short walkthrough of what I do: designing fins, nozzles, airframes and other critical components, and why design iteration and design for manufacturability matter before a part ever reaches the machine shop."
             />
             <div className="lg:pt-6">
               <p className="eyebrow text-signal">Engineer's log</p>
@@ -118,7 +120,7 @@ export function HomeSections() {
                 “Design changes are almost unavoidable.”
               </blockquote>
               <p className="mt-6 text-muted-foreground">
-                Hands-on across the full cycle: SolidWorks design, fabrication, assembly and live static fire testing.
+                {profile.cycle}
               </p>
               <Button asChild variant="frame" size="xl" className="mt-8">
                 <Link to="/media">Open the gallery</Link>
@@ -136,7 +138,7 @@ export function HomeSections() {
           <p className="eyebrow text-foreground/80">Transmissions · YouTube & Instagram</p>
           <h2 className="display-lg mt-4 max-w-3xl">Nebula Spacetime</h2>
           <p className="mt-5 max-w-xl text-lg text-foreground/85">
-            Videos and Shorts exploring space science, rocket technology and the universe — demystifying the cosmos one mission at a time.
+            Videos and Shorts exploring space science, aerospace engineering, rocket technology, and the universe. From propulsion to planets — demystifying the cosmos one mission at a time.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
             <Button asChild variant="signal" size="xl">
@@ -152,15 +154,18 @@ export function HomeSections() {
       </section>
 
       {/* CTA */}
-      <section className="border-t border-line py-24">
-        <Container className="flex flex-col items-start justify-between gap-8 md:flex-row md:items-end">
+      <section className="relative overflow-hidden border-t border-line py-24 md:py-32">
+        <img src={media.earthNight} alt="" loading="lazy" width={1920} height={1088} className="absolute inset-0 h-full w-full object-cover opacity-70" />
+        <div className="absolute inset-0 bg-scrim" />
+        <Container className="relative flex flex-col items-start justify-between gap-8 md:flex-row md:items-end">
           <div>
             <p className="eyebrow"><span className="text-signal">03</span> Open channel</p>
-            <h2 className="display-lg mt-3 max-w-3xl">Have hardware that needs to fly?</h2>
+            <h2 className="display-lg mt-3 max-w-3xl">Contact mission control</h2>
+            <p className="mt-4 max-w-xl text-lg text-foreground/85">Based in Madurai, Tamil Nadu, India · {profile.email}</p>
           </div>
           <div className="flex flex-wrap gap-3">
             <Button asChild variant="signal" size="xl">
-              <Link to="/contact">Contact mission control</Link>
+              <Link to="/contact">Open channel</Link>
             </Button>
             <Button asChild variant="frame" size="xl">
               <a href={profile.resumeUrl} target="_blank" rel="noreferrer">Download résumé</a>
