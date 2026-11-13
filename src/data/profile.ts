@@ -12,6 +12,7 @@ import testBedVerticalFire from "@/assets/media/test-bed-vertical-fire.mp4.asset
 import testBedVerticalPoster from "@/assets/media/test-bed-vertical-poster.jpg.asset.json";
 import testBedHorizontalFire from "@/assets/media/test-bed-horizontal-fire.mp4.asset.json";
 import testBedHorizontalPoster from "@/assets/media/test-bed-horizontal-poster.jpg.asset.json";
+import cubesatPrototypes from "@/assets/media/cubesat-prototype-models.jpg.asset.json";
 import resume from "@/assets/media/resume.pdf.asset.json";
 
 export const profile = {
@@ -43,6 +44,7 @@ export const media = {
   testBedVerticalPoster: testBedVerticalPoster.url,
   testBedHorizontalVideo: testBedHorizontalFire.url,
   testBedHorizontalPoster: testBedHorizontalPoster.url,
+  cubesatPrototypes: cubesatPrototypes.url,
   nebula: nebulaImg,
   earthNight: earthNightImg,
 };
@@ -117,6 +119,7 @@ export const missions: Mission[] = [
       "3D printed structural frames to validate fit and assembly, cutting iteration time before machined production.",
     details: ["3D printed structural frames", "Fit and assembly validated before machined production"],
     tags: ["Ultimaker Cura", "PrusaSlicer", "3D Printing"],
+    image: cubesatPrototypes.url,
     status: "Complete",
   },
   {
@@ -167,5 +170,6 @@ export const gallery = [
   { src: liftoffPoster.url, caption: "Rhumi twin liftoff — launch footage", credit: "Space Zone Aerospace" },
   { src: testBedVertical.url, caption: "Vertical test bed — hot fire", credit: "Space Zone Aerospace" },
   { src: testBedHorizontal.url, caption: "Horizontal test bed — hot fire", credit: "Space Zone Aerospace" },
+  { src: cubesatPrototypes.url, caption: "CubeSat & NanoSat prototype models", credit: "Fit & assembly check" },
   { src: interviewPoster.url, caption: "Mission briefing from the design office", credit: "Space Zone Aerospace" },
 ];
