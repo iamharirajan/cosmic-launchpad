@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Lock } from "lucide-react";
 
 import { Container, MissionVisual, PageHero, VideoPlayer } from "@/components/site/blocks";
+import { cn } from "@/lib/utils";
 import { media, missions, profile } from "@/data/profile";
 
 export const Route = createFileRoute("/missions")({
@@ -39,7 +40,7 @@ function MissionsPage() {
         {missions.map((m, i) => (
           <section key={m.code} id={m.code.toLowerCase()} className="scroll-mt-20 border-t border-line">
             <div className={`grid lg:grid-cols-2 ${i % 2 ? "lg:[&>*:first-child]:order-2" : ""}`}>
-              <div className="relative min-h-[420px] overflow-hidden">
+              <div className={cn("relative overflow-hidden", m.imageContain ? "self-start" : "min-h-[420px]")}>
                 <MissionVisual mission={m} eager={i === 0} fit={m.imageContain ? "contain" : "cover"} />
                 {m.images && m.images.length > 1 && (
                   <img
