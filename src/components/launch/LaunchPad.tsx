@@ -351,17 +351,19 @@ export function LaunchPad() {
       </group>
 
       {/* Propellant storage spheres */}
-      {[
-        [-12, -9, 1.3],
-        [11, 8, 1.1],
-      ].map(([x, z, r]) => (
-        <group key={x} position={[x!, GROUND_Y, z!]}>
-          <mesh position={[0, r! + 0.4, 0]} castShadow>
-            <sphereGeometry args={[r!, 24, 16]} />
+      {(
+        [
+          [-12, -9, 1.3],
+          [11, 8, 1.1],
+        ] as const
+      ).map(([x, z, r]) => (
+        <group key={x} position={[x, GROUND_Y, z]}>
+          <mesh position={[0, r + 0.4, 0]} castShadow>
+            <sphereGeometry args={[r, 24, 16]} />
             <meshStandardMaterial color="#ecebe7" roughness={0.45} />
           </mesh>
           <mesh position={[0, 0.25, 0]}>
-            <cylinderGeometry args={[r! * 0.8, r! * 0.9, 0.5, 16]} />
+            <cylinderGeometry args={[r * 0.8, r * 0.9, 0.5, 16]} />
             <meshStandardMaterial color="#9c9a95" roughness={0.9} />
           </mesh>
         </group>
