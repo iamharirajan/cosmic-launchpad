@@ -106,7 +106,7 @@ export function Smoke({ emittersRef, rateRef }: SmokeProps) {
         uniforms: {
           uScale: { value: 420 },
           uLit: { value: new THREE.Color("#fbf8f2") },
-          uShade: { value: new THREE.Color("#9da2ab") },
+          uShade: { value: new THREE.Color("#868c96") },
           uWarm: { value: new THREE.Color("#ffb779") },
         },
       }),
@@ -134,7 +134,7 @@ export function Smoke({ emittersRef, rateRef }: SmokeProps) {
       sim.vel[j + 1] = e.direction.y * speed + (Math.random() - 0.5) * 1.2;
       sim.vel[j + 2] = e.direction.z * speed + (Math.random() - 0.5) * 1.2;
       sim.age[i] = 0;
-      sim.life[i] = 10 + Math.random() * 10;
+      sim.life[i] = 8 + Math.random() * 8;
       sim.base[i] = 1.8 + Math.random() * 2.4;
     }
 
@@ -156,14 +156,14 @@ export function Smoke({ emittersRef, rateRef }: SmokeProps) {
       let vz = vel[j + 2]!;
       // Deflection: most exhaust runs down the flame trench (along x) and billows out of both ends;
       // a share splashes across the launch platform deck.
-      const onDeck = i % 3 === 0;
+      const onDeck = i % 6 === 0;
       const floor = onDeck ? 0.08 : -0.85;
       if (y < floor) {
         const down = Math.abs(vy);
         if (onDeck) {
-          const len = Math.hypot(vx, vz) || 1;
-          vx = (vx / len) * down * 1.1 + (Math.random() - 0.5) * 3;
-          vz = (vz / len) * down * 1.1 + (Math.random() - 0.5) * 3;
+          const side = i % 4 === 0 ? 1 : -1;
+          vx = side * (down * 0.9 + 1.5 + Math.random() * 2);
+          vz = (Math.random() - 0.5) * 1.5;
         } else {
           const side = i % 2 === 0 ? 1 : -1;
           vx = side * (down * 2.1 + 3 + Math.random() * 3);
