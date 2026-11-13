@@ -41,6 +41,16 @@ function MissionsPage() {
             <div className={`grid lg:grid-cols-2 ${i % 2 ? "lg:[&>*:first-child]:order-2" : ""}`}>
               <div className="relative min-h-[420px] overflow-hidden">
                 <MissionVisual mission={m} eager={i === 0} />
+                {m.images && m.images.length > 1 && (
+                  <img
+                    src={m.images[1]}
+                    alt={`${m.title} — second test bed`}
+                    loading="lazy"
+                    width={1600}
+                    height={720}
+                    className="absolute bottom-4 right-4 hidden h-24 w-40 border border-line object-cover shadow-card md:block"
+                  />
+                )}
                 <span className="absolute left-5 top-5 bg-background/80 px-3 py-1 font-mono text-[0.65rem] uppercase tracking-[0.2em] backdrop-blur">
                   Status · <span className="text-signal">{m.status}</span>
                 </span>
