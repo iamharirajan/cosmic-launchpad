@@ -145,6 +145,9 @@ export function VideoPlayer({
   caption,
   autoPlay = false,
   aspect = "aspect-[9/16]",
+  fit = "cover",
+  framed = false,
+  showCaption = true,
   className,
 }: {
   src: string;
@@ -153,6 +156,11 @@ export function VideoPlayer({
   caption?: string;
   autoPlay?: boolean;
   aspect?: string;
+  /** "contain" shows the whole frame on black, like the live site's portrait players. */
+  fit?: "cover" | "contain";
+  /** Signal-red top rule, matching the live site's video frames. */
+  framed?: boolean;
+  showCaption?: boolean;
   className?: string;
 }) {
   const ref = useRef<HTMLVideoElement>(null);
@@ -169,7 +177,7 @@ export function VideoPlayer({
 
   return (
     <figure className={cn("group", className)}>
-      <div className="relative overflow-hidden bg-surface">
+      <div className={cn("relative overflow-hidden", fit === "contain" ? "bg-background" : "bg-surface", framed && "border-t-[3px] border-signal")}>
         <video
           ref={ref}
           src={src}
@@ -182,7 +190,7 @@ export function VideoPlayer({
           controls={playing}
           onPlay={() => setPlaying(true)}
           onPause={() => setPlaying(false)}
-          className={cn(aspect, "w-full object-cover")}
+          className={cn(aspect, "w-full", fit === "contain" ? "object-contain" : "object-cover")}
           aria-label={title}
         />
         {!playing && (
@@ -208,10 +216,12 @@ export function VideoPlayer({
           </button>
         )}
       </div>
-      <figcaption className="mt-4">
-        <p className="font-display text-2xl font-bold uppercase">{title}</p>
-        {caption && <p className="mt-1 text-sm text-muted-foreground">{caption}</p>}
-      </figcaption>
+      {showCaption && (
+        <figcaption className="mt-4">
+          <p className="font-display text-2xl font-bold uppercase">{title}</p>
+          {caption && <p className="mt-1 text-sm text-muted-foreground">{caption}</p>}
+        </figcaption>
+      )}
     </figure>
   );
 }

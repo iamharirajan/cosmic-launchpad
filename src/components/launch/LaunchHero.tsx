@@ -13,8 +13,8 @@ import {
 const LaunchCanvas = lazy(() => import("./LaunchCanvas"));
 
 const captions = [
-  { from: 0.5, to: 0.66, stage: "SRB Separation", title: "Flight hardware design", body: "Nozzles, injectors, pyro valves, fins, airframes and fuel grains — production-ready drawings with tolerances and material callouts." },
-  { from: 0.7, to: 0.85, stage: "MECO · ET Sep", title: "Manufacturing & prototyping", body: "Mechanical drawings to aerospace standards and DFM assessments before manufacturing release." },
+  { from: 0.5, to: 0.66, title: "Flight hardware design", body: "Nozzles, injectors, pyro valves, fins, airframes and fuel grains — production-ready drawings with tolerances and material callouts." },
+  { from: 0.7, to: 0.85, title: "Manufacturing & prototyping", body: "Mechanical drawings to aerospace standards and DFM assessments before manufacturing release." },
 ];
 
 function Fallback() {
@@ -116,13 +116,12 @@ export function LaunchHero() {
           if (o <= 0.001) return null;
           return (
             <div
-              key={c.stage}
+              key={c.title}
               className="pointer-events-none absolute inset-y-0 left-0 flex items-center px-5 md:px-10"
               style={{ opacity: o, transform: `translateY(${(1 - o) * 20}px)` }}
             >
               <div className="max-w-md border-l-2 border-signal bg-background/55 py-5 pl-5 pr-6 backdrop-blur-sm">
-                <p className="eyebrow text-signal">{c.stage}</p>
-                <h2 className="display-md mt-2">{c.title}</h2>
+                <h2 className="display-md">{c.title}</h2>
                 <p className="mt-3 text-foreground/85">{c.body}</p>
               </div>
             </div>

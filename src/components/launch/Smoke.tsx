@@ -2,18 +2,25 @@ import { useFrame } from "@react-three/fiber";
 import { useMemo, useRef } from "react";
 import * as THREE from "three";
 
-const COUNT = 2200;
+const COUNT = 3600;
+// Feel constants
+const SPAWN_RATE = 1250; // particles per second at full thrust
+const BUOYANCY = 0.95;
+const DRAG = 1.1;
 
 const vertex = /* glsl */ `
   attribute float aSize;
   attribute float aAlpha;
   attribute float aHeat;
+  attribute float aSeed;
   varying float vAlpha;
   varying float vHeat;
+  varying float vSeed;
   uniform float uScale;
   void main() {
     vAlpha = aAlpha;
     vHeat = aHeat;
+    vSeed = aSeed;
     vec4 mv = modelViewMatrix * vec4(position, 1.0);
     gl_PointSize = aSize * uScale / max(-mv.z, 0.1);
     gl_Position = projectionMatrix * mv;
@@ -23,17 +30,30 @@ const vertex = /* glsl */ `
 const fragment = /* glsl */ `
   uniform vec3 uLit;
   uniform vec3 uShade;
+  uniform vec3 uWarm;
   varying float vAlpha;
   varying float vHeat;
+  varying float vSeed;
+  float hash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+  float noise(vec2 p) {
+    vec2 i = floor(p), f = fract(p);
+    vec2 u = f * f * (3.0 - 2.0 * f);
+    return mix(mix(hash(i), hash(i + vec2(1.0, 0.0)), u.x), mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), u.x), u.y);
+  }
   void main() {
     vec2 c = gl_PointCoord - 0.5;
     float d = length(c);
     if (d > 0.5) discard;
-    float soft = smoothstep(0.5, 0.0, d);
-    float shade = clamp(0.5 - c.y * 0.9, 0.0, 1.0);
-    vec3 col = mix(uShade, uLit, shade);
-    col = mix(col, vec3(1.0, 0.62, 0.25) * 1.6, vHeat);
-    gl_FragColor = vec4(col, soft * soft * vAlpha);
+    // cauliflower edge: lumpy fbm boundary like a rising steam cloud
+    vec2 q = c * 3.2 + vSeed * 17.0;
+    float n = noise(q) * 0.6 + noise(q * 2.1) * 0.3 + noise(q * 4.3) * 0.1;
+    float body = smoothstep(0.5, 0.18, d + (n - 0.5) * 0.32);
+    if (body < 0.01) discard;
+    // sun from upper left: bright tops, grey undersides, warm glow from the flame
+    float lit = clamp(0.55 - c.y * 1.1 + c.x * -0.35 + (n - 0.5) * 0.5, 0.0, 1.0);
+    vec3 col = mix(uShade, uLit, lit);
+    col = mix(col, uWarm, vHeat * 0.85);
+    gl_FragColor = vec4(col, body * vAlpha);
     #include <tonemapping_fragment>
     #include <colorspace_fragment>
   }
@@ -59,6 +79,7 @@ export function Smoke({ emittersRef, rateRef }: SmokeProps) {
       alpha: new Float32Array(COUNT),
       heat: new Float32Array(COUNT),
       base: new Float32Array(COUNT),
+      seed: Float32Array.from({ length: COUNT }, () => Math.random()),
       cursor: 0,
       carry: 0,
     };
@@ -70,6 +91,7 @@ export function Smoke({ emittersRef, rateRef }: SmokeProps) {
     g.setAttribute("aSize", new THREE.BufferAttribute(sim.size, 1).setUsage(THREE.DynamicDrawUsage));
     g.setAttribute("aAlpha", new THREE.BufferAttribute(sim.alpha, 1).setUsage(THREE.DynamicDrawUsage));
     g.setAttribute("aHeat", new THREE.BufferAttribute(sim.heat, 1).setUsage(THREE.DynamicDrawUsage));
+    g.setAttribute("aSeed", new THREE.BufferAttribute(sim.seed, 1));
     g.boundingSphere = new THREE.Sphere(new THREE.Vector3(0, 50, 0), 400);
     return g;
   }, [sim]);
@@ -83,8 +105,9 @@ export function Smoke({ emittersRef, rateRef }: SmokeProps) {
         depthWrite: false,
         uniforms: {
           uScale: { value: 420 },
-          uLit: { value: new THREE.Color("#f3ece4") },
-          uShade: { value: new THREE.Color("#8a8f9a") },
+          uLit: { value: new THREE.Color("#fbf8f2") },
+          uShade: { value: new THREE.Color("#868c96") },
+          uWarm: { value: new THREE.Color("#ffb779") },
         },
       }),
     [],
@@ -95,7 +118,7 @@ export function Smoke({ emittersRef, rateRef }: SmokeProps) {
     material.uniforms["uScale"]!.value = state.size.height * 0.55;
     const emitters = emittersRef.current;
     const rate = rateRef.current;
-    sim.carry += rate * dt * 900;
+    sim.carry += rate * dt * SPAWN_RATE;
     let spawn = Math.floor(sim.carry);
     sim.carry -= spawn;
     while (spawn-- > 0 && emitters.length) {
@@ -111,8 +134,8 @@ export function Smoke({ emittersRef, rateRef }: SmokeProps) {
       sim.vel[j + 1] = e.direction.y * speed + (Math.random() - 0.5) * 1.2;
       sim.vel[j + 2] = e.direction.z * speed + (Math.random() - 0.5) * 1.2;
       sim.age[i] = 0;
-      sim.life[i] = 6 + Math.random() * 7;
-      sim.base[i] = 1.4 + Math.random() * 1.8;
+      sim.life[i] = 8 + Math.random() * 8;
+      sim.base[i] = 1.8 + Math.random() * 2.4;
     }
 
     const { pos, vel, age, life, size, alpha, heat, base } = sim;
@@ -131,29 +154,31 @@ export function Smoke({ emittersRef, rateRef }: SmokeProps) {
       let vx = vel[j]!;
       let vy = vel[j + 1]!;
       let vz = vel[j + 2]!;
-      // Deflection: most exhaust runs down the flame trench (along z) and billows out of both ends;
+      // Deflection: most exhaust runs down the flame trench (along x) and billows out of both ends;
       // a share splashes across the launch platform deck.
-      const onDeck = i % 3 === 0;
+      const onDeck = i % 6 === 0;
       const floor = onDeck ? 0.08 : -0.85;
       if (y < floor) {
         const down = Math.abs(vy);
         if (onDeck) {
-          const len = Math.hypot(vx, vz) || 1;
-          vx = (vx / len) * down * 1.1 + (Math.random() - 0.5) * 3;
-          vz = (vz / len) * down * 1.1 + (Math.random() - 0.5) * 3;
+          const side = i % 4 === 0 ? 1 : -1;
+          vx = side * (down * 0.9 + 1.5 + Math.random() * 2);
+          vz = (Math.random() - 0.5) * 1.5;
         } else {
           const side = i % 2 === 0 ? 1 : -1;
-          vz = side * (down * 1.7 + 2 + Math.random() * 2);
-          vx = (Math.random() - 0.5) * 2.5;
+          vx = side * (down * 2.1 + 3 + Math.random() * 3);
+          vz = (Math.random() - 0.5) * 3.5;
         }
-        vy = 0.4 + Math.random() * 0.6;
+        vy = 0.8 + Math.random() * 1.4;
         y = floor;
       }
-      const drag = Math.exp(-1.4 * dt);
+      const drag = Math.exp(-DRAG * dt);
       vx *= drag;
-      vy = vy * drag + 0.25 * dt; // gentle buoyancy
+      // hot steam rises harder once it has slowed down, building tall billows
+      vy = vy * drag + BUOYANCY * dt * (1 + Math.min(a, 4) * 0.25);
       vz *= drag;
-      x += vx * dt + 0.15 * dt; // light wind
+      x += vx * dt;
+      z += 0.15 * dt; // light onshore wind
       y += vy * dt;
       z += vz * dt;
       pos[j] = x;
@@ -163,9 +188,9 @@ export function Smoke({ emittersRef, rateRef }: SmokeProps) {
       vel[j + 1] = vy;
       vel[j + 2] = vz;
       const t = a / l;
-      size[i] = base[i]! * (0.7 + a * 1.4);
-      alpha[i] = Math.min(1, a * 3) * (1 - t) * 0.7;
-      heat[i] = Math.max(0, 1 - a * 2.2) * 0.9;
+      size[i] = base[i]! * (0.7 + Math.min(a, 8) * 1.6);
+      alpha[i] = Math.min(1, a * 3) * (1 - t * t) * 0.92;
+      heat[i] = Math.max(0, 1 - a * 2.4) * 0.8;
     }
 
     for (const name of ["position", "aSize", "aAlpha", "aHeat"]) {
