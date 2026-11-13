@@ -132,13 +132,13 @@ export function Smoke({ emittersRef, rateRef }: SmokeProps) {
       let vy = vel[j + 1]!;
       let vz = vel[j + 2]!;
       // Ground deflection: plume hitting the pad spreads sideways into a billowing cloud.
-      if (y < 0.35) {
+      if (y < -0.75) {
         const len = Math.hypot(vx, vz) || 1;
         const down = Math.abs(vy);
         vx = (vx / len) * down * 1.3 + vx * 0.3 + (Math.random() - 0.5) * 3;
         vz = (vz / len) * down * 1.3 + vz * 0.3 + (Math.random() - 0.5) * 3;
         vy = 0.4 + Math.random() * 0.6;
-        y = 0.35;
+        y = -0.75;
       }
       const drag = Math.exp(-1.4 * dt);
       vx *= drag;

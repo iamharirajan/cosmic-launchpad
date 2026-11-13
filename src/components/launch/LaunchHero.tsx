@@ -78,7 +78,7 @@ export function LaunchHero() {
           style={{ opacity: introOpacity }}
         >
           <div
-            className="mx-auto w-full max-w-[1440px] px-5 pb-48 md:px-10 md:pb-28"
+            className="mx-auto w-full max-w-[1440px] px-5 pb-28 md:px-10 md:pb-28"
             style={{ pointerEvents: introOpacity > 0.5 ? "auto" : "none" }}
           >
             <p className="eyebrow animate-rise flex items-center gap-2 text-foreground/80">

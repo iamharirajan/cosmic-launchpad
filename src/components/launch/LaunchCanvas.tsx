@@ -25,9 +25,9 @@ const SCROLL_DAMP = 4.5;
 const PAD_SUN = new THREE.Vector3(-0.55, 0.32, 0.78).normalize();
 
 const SKY = {
-  zenithLow: new THREE.Color("#2c62b4"),
+  zenithLow: new THREE.Color("#2a5fb0"),
   zenithHigh: new THREE.Color("#02040c"),
-  horizonLow: new THREE.Color("#e8d3bb"),
+  horizonLow: new THREE.Color("#c4d3e2"),
   horizonHigh: new THREE.Color("#1d3d78"),
 };
 
@@ -60,7 +60,7 @@ function Scene({ onReady }: { onReady: () => void }) {
   ]);
 
   const skyMat = useMemo(createSkyMaterial, []);
-  const fog = useMemo(() => new THREE.Fog("#f2c9a0", 40, 600), []);
+  const fog = useMemo(() => new THREE.Fog("#c4d3e2", 40, 600), []);
 
   useEffect(() => {
     scene.fog = fog;
