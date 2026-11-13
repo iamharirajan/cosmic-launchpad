@@ -56,8 +56,30 @@ export function PageHero({
 }
 
 /** Mission photo, or a "imagery withheld" panel when there is no real photo. */
-export function MissionVisual({ mission, className, eager = false }: { mission: Mission; className?: string; eager?: boolean }) {
-  if (mission.image)
+export function MissionVisual({
+  mission,
+  className,
+  eager = false,
+  fit = "cover",
+}: {
+  mission: Mission;
+  className?: string;
+  eager?: boolean;
+  fit?: "cover" | "contain";
+}) {
+  if (mission.image) {
+    if (fit === "contain")
+      return (
+        <div className={cn("absolute inset-0 bg-surface", className)} aria-hidden>
+          <div className="grid-lines absolute inset-0 opacity-40" />
+          <img
+            src={mission.image}
+            alt={mission.title}
+            loading={eager ? "eager" : "lazy"}
+            className="relative h-full w-full object-contain p-5 md:p-8"
+          />
+        </div>
+      );
     return (
       <img
         src={mission.image}

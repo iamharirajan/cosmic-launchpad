@@ -40,7 +40,7 @@ function MissionsPage() {
           <section key={m.code} id={m.code.toLowerCase()} className="scroll-mt-20 border-t border-line">
             <div className={`grid lg:grid-cols-2 ${i % 2 ? "lg:[&>*:first-child]:order-2" : ""}`}>
               <div className="relative min-h-[420px] overflow-hidden">
-                <MissionVisual mission={m} eager={i === 0} />
+                <MissionVisual mission={m} eager={i === 0} fit={m.imageContain ? "contain" : "cover"} />
                 {m.images && m.images.length > 1 && (
                   <img
                     src={m.images[1]}

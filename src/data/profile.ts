@@ -67,6 +67,8 @@ export type Mission = {
   image?: string;
   /** Extra real photos, shown as an inset on the mission page. */
   images?: string[];
+  /** Show the photo at its true size on the mission page instead of stretching it. */
+  imageContain?: boolean;
   /** Real footage only. */
   videos?: MissionVideo[];
   status: string;
@@ -120,6 +122,7 @@ export const missions: Mission[] = [
     details: ["3D printed structural frames", "Fit and assembly validated before machined production"],
     tags: ["Ultimaker Cura", "PrusaSlicer", "3D Printing"],
     image: cubesatPrototypes.url,
+    imageContain: true,
     status: "Complete",
   },
   {
