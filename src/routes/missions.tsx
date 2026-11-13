@@ -24,7 +24,7 @@ function MissionsPage() {
       <PageHero
         eyebrow="Mission manifest"
         title={<>Missions</>}
-        intro="Flight hardware, test infrastructure and prototypes — each designed in CAD, built, and taken through to test."
+        intro={profile.cycle}
         image={media.rhumiLaunch}
       />
       <Container className="py-10">
