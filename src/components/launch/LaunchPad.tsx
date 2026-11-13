@@ -318,7 +318,7 @@ export function LaunchPad() {
           <boxGeometry args={[1.8, 0.03, 0.03]} />
           {rust}
         </mesh>
-        <mesh position={[TOWER_W / 2 + 1.9 - TOWER_W / 2 + 0.55, 0.16, 0]} castShadow>
+        <mesh position={[1.9, 0.16, 0]} castShadow>
           <sphereGeometry args={[0.3, 24, 12, 0, Math.PI * 2, 0, Math.PI / 2]} />
           <meshStandardMaterial color="#d8d6d0" roughness={0.6} side={THREE.DoubleSide} />
         </mesh>
