@@ -104,13 +104,13 @@ export function LaunchHero() {
               ))}
             </ul>
             <div className="animate-rise mt-6 flex flex-wrap gap-3 [animation-delay:360ms]">
-              <Button asChild variant="signal" size="lg">
+              <Button asChild variant="signal" size="xl">
                 <Link to="/contact">Contact mission control</Link>
               </Button>
-              <Button asChild variant="frame" size="lg">
+              <Button asChild variant="frame" size="xl">
                 <a href="#intro">▶ Watch intro</a>
               </Button>
-              <Button asChild variant="frame" size="lg">
+              <Button asChild variant="frame" size="xl">
                 <a href="#missions">↓ View projects</a>
               </Button>
             </div>
