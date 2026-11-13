@@ -29,7 +29,7 @@ const fragment = /* glsl */ `
     vec3 col = mix(uCore, uMid, smoothstep(0.0, 0.3, along));
     col = mix(col, uTail, smoothstep(0.3, 1.0, along));
     float a = (1.0 - smoothstep(0.15, 1.0, along)) * rim * uIntensity * flick * diamonds;
-    gl_FragColor = vec4(col * a * 1.8, a);
+    gl_FragColor = vec4(min(col * a * 2.2, vec3(16.0)), a);
   }
 `;
 
