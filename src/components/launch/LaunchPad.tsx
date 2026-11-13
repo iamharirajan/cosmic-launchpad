@@ -25,6 +25,56 @@ const PAD_BUILDINGS: [number, number, number, number, number][] = [
   [-7, -14, 1.6, 0.6, 1.2],
   [16, 14, 1.8, 0.7, 1.1],
 ];
+// [x, z, radiusX, radiusZ] — standing water in the marsh around the pad
+const MARSH_PONDS: [number, number, number, number][] = [
+  [-34, 18, 7, 3],
+  [30, 30, 9, 3.5],
+  [-46, -20, 6, 2.5],
+  [40, -26, 8, 3],
+  [8, 48, 10, 2.5],
+  [-26, 60, 7, 3],
+];
+
+/** Instanced scrub trees: squashed icosahedra scattered outside the pad clearing, avoiding the roads. */
+function buildTrees(count: number) {
+  const geometry = new THREE.IcosahedronGeometry(1, 1);
+  geometry.translate(0, 0.6, 0);
+  const mats: THREE.Matrix4[] = [];
+  const colors: THREE.Color[] = [];
+  const m = new THREE.Matrix4();
+  const q = new THREE.Quaternion();
+  const palette = ["#2e4420", "#3a5228", "#27391b", "#485f2e", "#33482a"].map((c) => new THREE.Color(c));
+  let seed = 7;
+  const rand = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+  let guard = 0;
+  while (mats.length < count && guard++ < count * 20) {
+    const r = 28 + Math.pow(rand(), 0.7) * 120;
+    const a = rand() * Math.PI * 2;
+    const x = Math.cos(a) * r;
+    const z = Math.sin(a) * r;
+    if (z < COAST_Z + 6) continue; // keep the beach clear
+    if (Math.abs(x * Math.cos(0.55) - z * Math.sin(0.55)) < 3 && z > 0) continue; // crawlerway
+    const sx = 0.6 + rand() * 1.1;
+    const sy = 0.5 + rand() * 0.9;
+    q.setFromEuler(new THREE.Euler(0, rand() * Math.PI, 0));
+    mats.push(m.compose(new THREE.Vector3(x, GROUND_Y, z), q, new THREE.Vector3(sx, sy, sx * (0.7 + rand() * 0.5))).clone());
+    colors.push(palette[Math.floor(rand() * palette.length)]!);
+  }
+  return {
+    geometry,
+    count: mats.length,
+    attach: (mesh: THREE.InstancedMesh | null) => {
+      if (!mesh) return;
+      mats.forEach((mat, i) => {
+        mesh.setMatrixAt(i, mat);
+        mesh.setColorAt(i, colors[i]!);
+      });
+      mesh.instanceMatrix.needsUpdate = true;
+      if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
+    },
+  };
+}
+
 const LIGHT_MASTS: [number, number][] = [
   [-10, 6],
   [9.5, 6.5],
@@ -106,7 +156,7 @@ const concreteTexture = () =>
   canvasTexture(
     256,
     (g, s) => {
-      g.fillStyle = "#c4bdab";
+      g.fillStyle = "#bdb9ad";
       g.fillRect(0, 0, s, s);
       speckle(g, s, 14000, ["rgba(80,78,72,0.22)", "rgba(200,198,190,0.25)", "rgba(120,110,95,0.15)"], 2);
       for (let i = 0; i < 6; i++) {
@@ -222,9 +272,30 @@ function buildTower() {
     decks.push({ p: [cx - 0.15, y + 0.22, half * 0.4], s: [w * 0.6, 0.4, w * 0.5] });
   for (const y of [y0 + 0.9, y0 + 2.2, y0 + 3.5, y0 + 4.8])
     decks.push({ p: [cx + half + 0.18, y, -half + 0.2], s: [0.36, 0.05, 0.5] });
+  // deck railings on the platform levels
+  for (let y = y0 + step * 3; y < TOWER_TOP; y += step * 3) {
+    const ry = y + 0.16;
+    for (const dz of [-half - 0.06, half + 0.06]) steel.push({ p: [cx, ry, dz], s: [w + 0.12, 0.012, 0.012] });
+    for (const dx of [-half - 0.06, half + 0.06]) steel.push({ p: [cx + dx, ry, 0], s: [0.012, 0.012, w + 0.12] });
+  }
   // elevator shaft & cable trays
   decks.push({ p: [cx - half - 0.12, y0 + h / 2, -0.25], s: [0.22, h, 0.3] });
-  return { steel: mergeBeams(steel), decks: mergeBeams(decks) };
+  // vertical propellant / water feed lines running up the pad-side face
+  const pipes = [-0.32, -0.2, 0.28].map((dz, i) => {
+    const len = h - 0.6 - i * 0.9;
+    const g = new THREE.CylinderGeometry(0.028, 0.028, len, 8);
+    g.translate(cx + half + 0.05, y0 + len / 2, dz);
+    return g;
+  });
+  return { steel: mergeBeams(steel), decks: mergeBeams(decks), pipes: mergeGeometries(pipes)! };
+}
+
+/** Steel framing on the rotating service structure's outer face. */
+function buildRssFrame() {
+  const beams: Beam[] = [];
+  for (let x = 0.2; x <= 2.61; x += 0.48) beams.push({ p: [x, 1.6, -0.08], s: [0.05, 5.0, 0.05] });
+  for (let y = -0.85; y <= 4.1; y += 0.5) beams.push({ p: [1.4, y, -0.08], s: [2.6, 0.04, 0.05] });
+  return mergeBeams(beams);
 }
 
 /** Mobile launcher platform: deck with exhaust holes, pedestals and tail service masts. */
@@ -245,7 +316,7 @@ function buildPlatform() {
 }
 
 /** Pad 39A-style launch complex with retracting access arms, crawlerway, water tower and coastline. */
-export function LaunchPad() {
+export function LaunchPad({ trees = 600 }: { trees?: number }) {
   const tex = useMemo(
     () => ({
       grass: grassTexture(),
@@ -259,6 +330,9 @@ export function LaunchPad() {
   );
   const tower = useMemo(buildTower, []);
   const platform = useMemo(buildPlatform, []);
+  const rssFrame = useMemo(buildRssFrame, []);
+  const ocean = useMemo(createOceanMaterial, []);
+  const forest = useMemo(() => buildTrees(trees), [trees]);
   const goxArm = useRef<THREE.Group>(null);
   const accessArm = useRef<THREE.Group>(null);
 
@@ -277,7 +351,8 @@ export function LaunchPad() {
     return new THREE.BufferGeometry().setFromPoints(pts);
   }, []);
 
-  useFrame(() => {
+  useFrame((state) => {
+    ocean.uniforms["uTime"]!.value = state.clock.elapsedTime;
     const p = launchState.progress;
     if (accessArm.current) accessArm.current.rotation.y = -1.45 * smooth(0.01, 0.045, p);
     if (goxArm.current) goxArm.current.rotation.y = -1.35 * smooth(0.04, 0.075, p);
@@ -298,9 +373,36 @@ export function LaunchPad() {
         <planeGeometry args={[2800, 8]} />
         <meshStandardMaterial color="#d9cba8" roughness={1} />
       </mesh>
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, GROUND_Y - 0.05, COAST_Z - 1000]}>
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, GROUND_Y - 0.05, COAST_Z - 1000]} material={ocean}>
         <planeGeometry args={[2800, 2000]} />
-        <meshStandardMaterial color="#1d4f7c" roughness={0.22} metalness={0.15} />
+      </mesh>
+      {/* surf line */}
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, GROUND_Y - 0.03, COAST_Z - 8.6]}>
+        <planeGeometry args={[2800, 1.2]} />
+        <meshStandardMaterial color="#e9efef" roughness={0.9} transparent opacity={0.55} />
+      </mesh>
+
+      {/* Marsh ponds and drainage canals */}
+      {MARSH_PONDS.map(([x, z, rx, rz], i) => (
+        <mesh key={`pond${i}`} rotation={[-Math.PI / 2, 0, i * 0.7]} position={[x, GROUND_Y + 0.01, z]} scale={[rx, rz, 1]}>
+          <circleGeometry args={[1, 20]} />
+          <meshStandardMaterial color="#29453f" roughness={0.12} metalness={0.2} />
+        </mesh>
+      ))}
+
+      {/* Scrub trees and palmetto clumps */}
+      <instancedMesh args={[forest.geometry, undefined, forest.count]} ref={forest.attach} castShadow receiveShadow>
+        <meshStandardMaterial vertexColors={false} roughness={0.95} />
+      </instancedMesh>
+
+      {/* Perimeter road and pad access road */}
+      <mesh rotation={[-Math.PI / 2, 0, Math.PI / 8]} position={[0, GROUND_Y + 0.025, 0]} receiveShadow>
+        <ringGeometry args={[24.6, 25.6, 8]} />
+        <meshStandardMaterial color="#4b4c4e" roughness={0.9} />
+      </mesh>
+      <mesh rotation={[-Math.PI / 2, 0, -0.35]} position={[-18, GROUND_Y + 0.025, 46]} receiveShadow>
+        <planeGeometry args={[0.9, 50]} />
+        <meshStandardMaterial color="#4b4c4e" roughness={0.9} />
       </mesh>
 
       {/* Crawlerway */}
@@ -374,6 +476,9 @@ export function LaunchPad() {
       <mesh geometry={tower.decks} castShadow receiveShadow>
         {grey}
       </mesh>
+      <mesh geometry={tower.pipes} castShadow>
+        {white}
+      </mesh>
       {/* Lightning mast + catenary wires */}
       <mesh position={[TOWER_X, TOWER_TOP + 1.3, 0]} castShadow>
         <cylinderGeometry args={[0.03, 0.08, 2.0, 10]} />
@@ -420,6 +525,9 @@ export function LaunchPad() {
         <mesh position={[1.4, 1.6, -0.7]} castShadow receiveShadow>
           <boxGeometry args={[2.6, 5.0, 1.2]} />
           <meshStandardMaterial map={tex.rss} roughness={0.75} metalness={0.15} />
+        </mesh>
+        <mesh geometry={rssFrame} position={[0, 0, -0.7 + 0.6]} castShadow>
+          {steel}
         </mesh>
         <mesh position={[2.75, -0.35, -0.7]}>
           <boxGeometry args={[0.2, 1.4, 0.2]} />
@@ -506,5 +614,78 @@ export function createSkyMaterial() {
       uSun: { value: new THREE.Vector3(-0.8, 0.55, -0.55).normalize() },
       uStars: { value: 0 },
     },
+  });
+}
+
+const oceanVertex = /* glsl */ `
+  uniform float uTime;
+  varying vec3 vWorld;
+  #include <fog_pars_vertex>
+  void main() {
+    vec4 wp = modelMatrix * vec4(position, 1.0);
+    vWorld = wp.xyz;
+    vec4 mvPosition = viewMatrix * wp;
+    gl_Position = projectionMatrix * mvPosition;
+    #include <fog_vertex>
+  }
+`;
+const oceanFragment = /* glsl */ `
+  uniform float uTime;
+  uniform vec3 uDeep;
+  uniform vec3 uShallow;
+  uniform vec3 uSkyRefl;
+  uniform vec3 uSunDir;
+  varying vec3 vWorld;
+  #include <fog_pars_fragment>
+  // sum of travelling waves -> analytic slope for the normal
+  vec2 waveSlope(vec2 p, float t) {
+    vec2 s = vec2(0.0);
+    vec2 dirs[4];
+    dirs[0] = normalize(vec2(0.3, 1.0));
+    dirs[1] = normalize(vec2(-0.6, 1.0));
+    dirs[2] = normalize(vec2(1.0, 0.4));
+    dirs[3] = normalize(vec2(-0.2, -1.0));
+    float freq[4];
+    freq[0] = 0.35; freq[1] = 0.6; freq[2] = 1.4; freq[3] = 2.6;
+    for (int i = 0; i < 4; i++) {
+      float ph = dot(dirs[i], p) * freq[i] + t * (1.2 + float(i) * 0.6);
+      s += dirs[i] * cos(ph) * freq[i] * (0.18 / (1.0 + float(i)));
+    }
+    return s;
+  }
+  void main() {
+    vec2 sl = waveSlope(vWorld.xz, uTime);
+    vec3 n = normalize(vec3(-sl.x, 1.0, -sl.y));
+    vec3 v = normalize(cameraPosition - vWorld);
+    float fres = 0.04 + 0.96 * pow(1.0 - clamp(dot(n, v), 0.0, 1.0), 5.0);
+    float shore = smoothstep(0.0, 40.0, -(vWorld.z + 78.0));
+    vec3 water = mix(uShallow, uDeep, shore);
+    vec3 col = mix(water, uSkyRefl, fres * 0.85);
+    vec3 h = normalize(uSunDir + v);
+    float spec = pow(clamp(dot(n, h), 0.0, 1.0), 220.0);
+    col += vec3(1.0, 0.95, 0.85) * spec * 3.5;
+    gl_FragColor = vec4(col, 1.0);
+    #include <tonemapping_fragment>
+    #include <colorspace_fragment>
+    #include <fog_fragment>
+  }
+`;
+
+/** Animated ocean with Fresnel sky reflection and sun glitter. */
+export function createOceanMaterial() {
+  return new THREE.ShaderMaterial({
+    vertexShader: oceanVertex,
+    fragmentShader: oceanFragment,
+    fog: true,
+    uniforms: THREE.UniformsUtils.merge([
+      THREE.UniformsLib.fog,
+      {
+        uTime: { value: 0 },
+        uDeep: { value: new THREE.Color("#0f3a63") },
+        uShallow: { value: new THREE.Color("#2b6f86") },
+        uSkyRefl: { value: new THREE.Color("#8fb0d0") },
+        uSunDir: { value: new THREE.Vector3(-0.55, 0.32, 0.78).normalize() },
+      },
+    ]),
   });
 }

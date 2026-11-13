@@ -2,7 +2,6 @@ import { useFrame } from "@react-three/fiber";
 import { useMemo, useRef } from "react";
 import * as THREE from "three";
 
-const COUNT = 3600;
 // Feel constants
 const SPAWN_RATE = 1250; // particles per second at full thrust
 const BUOYANCY = 0.95;
@@ -59,15 +58,18 @@ const fragment = /* glsl */ `
   }
 `;
 
-export type Emitter = { position: THREE.Vector3; direction: THREE.Vector3 };
+/** weight (default 1) scales how often an emitter is picked when spawning. */
+export type Emitter = { position: THREE.Vector3; direction: THREE.Vector3; weight?: number };
 
 type SmokeProps = {
   emittersRef: { current: Emitter[] };
   rateRef: { current: number };
+  /** Particle budget (set by the device quality tier). */
+  count: number;
 };
 
 /** World-space exhaust and ground cloud particles. Left behind as the rocket climbs. */
-export function Smoke({ emittersRef, rateRef }: SmokeProps) {
+export function Smoke({ emittersRef, rateRef, count: COUNT }: SmokeProps) {
   const points = useRef<THREE.Points>(null);
   const sim = useMemo(() => {
     return {
@@ -83,7 +85,7 @@ export function Smoke({ emittersRef, rateRef }: SmokeProps) {
       cursor: 0,
       carry: 0,
     };
-  }, []);
+  }, [COUNT]);
 
   const geometry = useMemo(() => {
     const g = new THREE.BufferGeometry();
@@ -121,8 +123,21 @@ export function Smoke({ emittersRef, rateRef }: SmokeProps) {
     sim.carry += rate * dt * SPAWN_RATE;
     let spawn = Math.floor(sim.carry);
     sim.carry -= spawn;
-    while (spawn-- > 0 && emitters.length) {
-      const e = emitters[spawn % emitters.length]!;
+    // fewer particles on light devices: each one is a little bigger so clouds keep their mass
+    const sizeBoost = Math.sqrt(4200 / COUNT);
+    spawn = Math.round(spawn * (COUNT / 4200));
+    let totalW = 0;
+    for (const e of emitters) totalW += e.weight ?? 1;
+    while (spawn-- > 0 && totalW > 0) {
+      let r = Math.random() * totalW;
+      let e = emitters[0]!;
+      for (const cand of emitters) {
+        r -= cand.weight ?? 1;
+        if (r <= 0) {
+          e = cand;
+          break;
+        }
+      }
       const i = sim.cursor;
       sim.cursor = (sim.cursor + 1) % COUNT;
       const j = i * 3;
@@ -135,7 +150,7 @@ export function Smoke({ emittersRef, rateRef }: SmokeProps) {
       sim.vel[j + 2] = e.direction.z * speed + (Math.random() - 0.5) * 1.2;
       sim.age[i] = 0;
       sim.life[i] = 8 + Math.random() * 8;
-      sim.base[i] = 1.8 + Math.random() * 2.4;
+      sim.base[i] = (1.8 + Math.random() * 2.4) * sizeBoost;
     }
 
     const { pos, vel, age, life, size, alpha, heat, base } = sim;
