@@ -5,25 +5,19 @@ import { Button } from "@/components/ui/button";
 import { media, profile } from "@/data/profile";
 import {
   PHASE_SWITCH,
-  activeStage,
-  altitudeKm,
-  formatClock,
   launchState,
-  missionClock,
   smooth,
-  stages,
-  velocityKmh,
   windowOpacity,
 } from "./timeline";
 
 const LaunchCanvas = lazy(() => import("./LaunchCanvas"));
 
 const captions = [
-  { from: 0.075, to: 0.18, stage: "T−0 · Ignition", title: "From concept to hot-fire", body: "Every nozzle, injector and pyro valve starts as a SolidWorks model — then it has to survive the flame." },
-  { from: 0.18, to: 0.31, stage: "Liftoff · Tower clear", title: "Rhumi Twin — flight proven", body: "Designed the Rhumi Twin rocket, successfully launched by Space Zone Aerospace." },
-  { from: 0.31, to: 0.42, stage: "Max Q", title: "Built to take the load", body: "Vertical and horizontal test beds engineered to hold full engine thrust through static fire." },
-  { from: 0.5, to: 0.66, stage: "SRB Separation", title: "Flight-critical hardware", body: "Fins, airframe sections and fuel grains — production-ready drawings with tolerances and material callouts." },
-  { from: 0.7, to: 0.85, stage: "MECO · ET Sep", title: "Getting hardware to the pad", body: "DFM reviews, BOMs, procurement and vendor coordination — the work behind every launch." },
+  { from: 0.075, to: 0.18, stage: "T−0 · Ignition", title: "Concept to hot-fire", body: "Junior Design Engineer at Space Zone Aerospace, designing rocket and missile hardware from concept to hot-fire." },
+  { from: 0.18, to: 0.31, stage: "Liftoff · Tower clear", title: "Rhumi twin rocket", body: "Designed the Rhumi twin rocket at Space Zone Aerospace — successfully launched by the company." },
+  { from: 0.31, to: 0.42, stage: "Max Q", title: "Vertical & horizontal test beds", body: "Developed both the vertical and horizontal test bed structures for rocket engine testing, and supported live static fire operations." },
+  { from: 0.5, to: 0.66, stage: "SRB Separation", title: "Flight hardware design", body: "Nozzles, injectors, pyro valves, fins, airframes and fuel grains — production-ready drawings with tolerances and material callouts." },
+  { from: 0.7, to: 0.85, stage: "MECO · ET Sep", title: "Manufacturing & prototyping", body: "Mechanical drawings to aerospace standards and DFM assessments before manufacturing release." },
 ];
 
 function Fallback() {
@@ -62,7 +56,6 @@ export function LaunchHero() {
     };
   }, []);
 
-  const stageIdx = activeStage(p);
   const introOpacity = 1 - smooth(0.02, 0.07, p);
   const haze = smooth(PHASE_SWITCH - 0.07, PHASE_SWITCH, p) * (1 - smooth(PHASE_SWITCH, PHASE_SWITCH + 0.06, p));
   const finale = smooth(0.88, 0.93, p);
@@ -85,7 +78,7 @@ export function LaunchHero() {
           style={{ opacity: introOpacity }}
         >
           <div
-            className="mx-auto w-full max-w-[1440px] px-5 pb-48 md:px-10 md:pb-28"
+            className="mx-auto w-full max-w-[1440px] px-5 pb-28 md:px-10 md:pb-28"
             style={{ pointerEvents: introOpacity > 0.5 ? "auto" : "none" }}
           >
             <p className="eyebrow animate-rise flex items-center gap-2 text-foreground/80">
@@ -156,50 +149,6 @@ export function LaunchHero() {
               </Button>
             </div>
           </div>
-        </div>
-
-        {/* Telemetry HUD */}
-        <div className="pointer-events-none absolute bottom-6 right-5 w-[min(320px,calc(100%-2.5rem))] border border-line bg-background/60 p-4 font-mono text-xs backdrop-blur-md md:bottom-10 md:right-10">
-          <div className="flex items-center justify-between">
-            <span className="eyebrow text-[0.6rem]">Telemetry · HM-01</span>
-            <span className="flex items-center gap-1.5 text-signal">
-              <span className="animate-blink h-1.5 w-1.5 rounded-full bg-signal" /> LIVE
-            </span>
-          </div>
-          <div className="mt-3 grid grid-cols-3 gap-2">
-            <div>
-              <p className="text-[0.6rem] text-muted-foreground">CLOCK</p>
-              <p className="text-base tabular-nums">{formatClock(missionClock(p))}</p>
-            </div>
-            <div>
-              <p className="text-[0.6rem] text-muted-foreground">ALT KM</p>
-              <p className="text-base tabular-nums">{altitudeKm(p).toFixed(1)}</p>
-            </div>
-            <div>
-              <p className="text-[0.6rem] text-muted-foreground">VEL KM/H</p>
-              <p className="text-base tabular-nums">{Math.round(velocityKmh(p)).toLocaleString("en-US")}</p>
-            </div>
-          </div>
-          <div className="mt-3 h-px w-full bg-line">
-            <div className="h-px bg-signal" style={{ width: `${p * 100}%` }} />
-          </div>
-          <ol className="mt-3 hidden space-y-1 sm:block">
-            {stages.map((s, i) => (
-              <li
-                key={s.label}
-                className={
-                  i === stageIdx
-                    ? "flex items-center gap-2 text-foreground"
-                    : i < stageIdx
-                      ? "flex items-center gap-2 text-muted-foreground line-through decoration-signal/60"
-                      : "flex items-center gap-2 text-muted-foreground/60"
-                }
-              >
-                <span className={i === stageIdx ? "h-1.5 w-1.5 bg-signal" : "h-1.5 w-1.5 bg-foreground/25"} />
-                {s.label}
-              </li>
-            ))}
-          </ol>
         </div>
 
         <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-scrim" style={{ opacity: smooth(0.95, 1, p) }} />

@@ -66,4 +66,9 @@ export function windowOpacity(p: number, a: number, b: number, edge = 0.02) {
 }
 
 /** Shared mutable store written by scroll, read in the render loop. */
-export const launchState = { progress: 0, snap: false };
+export const launchState: {
+  progress: number;
+  snap: boolean;
+  /** Dev-only: camera offset from the stack for inspecting the model. */
+  inspect: [number, number, number] | null;
+} = { progress: 0, snap: false, inspect: null };

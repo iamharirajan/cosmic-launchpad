@@ -9,7 +9,7 @@ export const Route = createFileRoute("/media")({
   head: () => ({
     meta: [
       { title: "Multimedia — Rhumi Twin Launch Videos & Images · Harirajan M" },
-      { name: "description", content: "Watch the Rhumi Twin liftoff and an interview from the design office, and browse images of rockets, test beds and prototypes." },
+      { name: "description", content: "Watch the Rhumi Twin liftoff and an interview from the design office, and browse launch photos." },
       { property: "og:title", content: "Multimedia — Harirajan M" },
       { property: "og:description", content: "Launch videos, interviews and image gallery." },
       { property: "og:type", content: "website" },
@@ -25,7 +25,7 @@ function MediaPage() {
       <PageHero
         eyebrow="Multimedia"
         title={<>Images & video</>}
-        intro="Launch-day footage, behind-the-scenes from the design office and a gallery of hardware."
+        intro="Launch-day footage, behind-the-scenes from the design office and a gallery of launch photos."
         image={media.liftoffPoster}
       />
 
@@ -42,9 +42,9 @@ function MediaPage() {
       <section className="border-t border-line bg-surface py-24">
         <Container>
           <SectionHeading index="02" eyebrow="Image of the mission" title="Gallery" />
-          <div className="mt-10 grid auto-rows-[260px] gap-3 md:grid-cols-3">
-            {gallery.map((g, i) => (
-              <figure key={g.caption} className={`group relative overflow-hidden ${i === 0 ? "md:col-span-1 md:row-span-2" : ""} ${i === 1 || i === 5 ? "md:col-span-2" : ""}`}>
+          <div className="mt-10 grid auto-rows-[420px] gap-3 md:grid-cols-3">
+            {gallery.map((g) => (
+              <figure key={g.caption} className="group relative overflow-hidden">
                 <img src={g.src} alt={g.caption} loading="lazy" className="hover-zoom h-full w-full object-cover" />
                 <figcaption className="absolute inset-x-0 bottom-0 bg-scrim p-4 pt-12">
                   <p className="font-display text-xl font-bold uppercase">{g.caption}</p>

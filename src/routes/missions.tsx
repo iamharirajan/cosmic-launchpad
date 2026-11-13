@@ -1,8 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Lock } from "lucide-react";
 
-import { Container, PageHero } from "@/components/site/blocks";
-import { media, missions } from "@/data/profile";
+import { Container, MissionVisual, PageHero } from "@/components/site/blocks";
+import { media, missions, profile } from "@/data/profile";
 
 export const Route = createFileRoute("/missions")({
   head: () => ({
@@ -24,14 +24,14 @@ function MissionsPage() {
       <PageHero
         eyebrow="Mission manifest"
         title={<>Missions</>}
-        intro="Flight hardware, test infrastructure and prototypes — each designed in CAD, built, and taken through to test."
+        intro={profile.cycle}
         image={media.rhumiLaunch}
       />
       <Container className="py-10">
         <div className="flex items-start gap-4 border border-line bg-surface p-5">
           <Lock className="mt-0.5 h-5 w-5 shrink-0 text-signal" />
           <p className="text-sm text-muted-foreground">
-            <span className="font-semibold text-foreground">Confidentiality notice.</span> Specific design data, drawings and test details are covered by confidentiality agreements and are not shown. Descriptions reflect scope only. Some images are illustrations.
+            <span className="font-semibold text-foreground">Confidentiality notice.</span> Specific design data, drawings and test details are covered by confidentiality agreements and are not shown. Descriptions reflect scope only.
           </p>
         </div>
       </Container>
@@ -40,7 +40,7 @@ function MissionsPage() {
           <section key={m.code} id={m.code.toLowerCase()} className="scroll-mt-20 border-t border-line">
             <div className={`grid lg:grid-cols-2 ${i % 2 ? "lg:[&>*:first-child]:order-2" : ""}`}>
               <div className="relative min-h-[420px] overflow-hidden">
-                <img src={m.image} alt={m.title} loading={i === 0 ? "eager" : "lazy"} width={1600} height={1000} className="absolute inset-0 h-full w-full object-cover" />
+                <MissionVisual mission={m} eager={i === 0} />
                 <span className="absolute left-5 top-5 bg-background/80 px-3 py-1 font-mono text-[0.65rem] uppercase tracking-[0.2em] backdrop-blur">
                   Status · <span className="text-signal">{m.status}</span>
                 </span>
