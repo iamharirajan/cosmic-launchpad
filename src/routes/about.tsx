@@ -1,7 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Award, GraduationCap } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
 import { Container, PageHero, SectionHeading } from "@/components/site/blocks";
 import { certifications, education, experience, media, profile, skills } from "@/data/profile";
 
