@@ -8,6 +8,10 @@ import interviewVideo from "@/assets/media/engineer-interview.mp4.asset.json";
 import interviewPoster from "@/assets/media/interview-poster.jpg.asset.json";
 import testBedVertical from "@/assets/media/test-bed-vertical.jpg.asset.json";
 import testBedHorizontal from "@/assets/media/test-bed-horizontal.jpg.asset.json";
+import testBedVerticalFire from "@/assets/media/test-bed-vertical-fire.mp4.asset.json";
+import testBedVerticalPoster from "@/assets/media/test-bed-vertical-poster.jpg.asset.json";
+import testBedHorizontalFire from "@/assets/media/test-bed-horizontal-fire.mp4.asset.json";
+import testBedHorizontalPoster from "@/assets/media/test-bed-horizontal-poster.jpg.asset.json";
 import resume from "@/assets/media/resume.pdf.asset.json";
 
 export const profile = {
@@ -35,8 +39,19 @@ export const media = {
   interviewPoster: interviewPoster.url,
   testBedVertical: testBedVertical.url,
   testBedHorizontal: testBedHorizontal.url,
+  testBedVerticalVideo: testBedVerticalFire.url,
+  testBedVerticalPoster: testBedVerticalPoster.url,
+  testBedHorizontalVideo: testBedHorizontalFire.url,
+  testBedHorizontalPoster: testBedHorizontalPoster.url,
   nebula: nebulaImg,
   earthNight: earthNightImg,
+};
+
+export type MissionVideo = {
+  src: string;
+  poster: string;
+  title: string;
+  caption: string;
 };
 
 export type Mission = {
@@ -50,6 +65,8 @@ export type Mission = {
   image?: string;
   /** Extra real photos, shown as an inset on the mission page. */
   images?: string[];
+  /** Real footage only. */
+  videos?: MissionVideo[];
   status: string;
 };
 
@@ -76,6 +93,20 @@ export const missions: Mission[] = [
     tags: ["Structures", "Test Systems", "SolidWorks"],
     image: testBedVertical.url,
     images: [testBedVertical.url, testBedHorizontal.url],
+    videos: [
+      {
+        src: media.testBedVerticalVideo,
+        poster: media.testBedVerticalPoster,
+        title: "Vertical test bed — hot fire",
+        caption: "Engine fired vertically on the stand built and assembled at Space Zone Aerospace.",
+      },
+      {
+        src: media.testBedHorizontalVideo,
+        poster: media.testBedHorizontalPoster,
+        title: "Horizontal test bed — hot fire",
+        caption: "Engine fired horizontally on the thrust stand, with instrumentation and feed lines rigged for the run.",
+      },
+    ],
     status: "Operational",
   },
   {

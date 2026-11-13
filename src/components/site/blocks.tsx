@@ -112,6 +112,7 @@ export function VideoPlayer({
   title,
   caption,
   autoPlay = false,
+  aspect = "aspect-[9/16]",
   className,
 }: {
   src: string;
@@ -119,6 +120,7 @@ export function VideoPlayer({
   title: string;
   caption?: string;
   autoPlay?: boolean;
+  aspect?: string;
   className?: string;
 }) {
   const ref = useRef<HTMLVideoElement>(null);
@@ -148,7 +150,7 @@ export function VideoPlayer({
           controls={playing}
           onPlay={() => setPlaying(true)}
           onPause={() => setPlaying(false)}
-          className="aspect-[9/16] w-full object-cover"
+          className={cn(aspect, "w-full object-cover")}
           aria-label={title}
         />
         {!playing && (

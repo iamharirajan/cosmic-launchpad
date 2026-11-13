@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Lock } from "lucide-react";
 
-import { Container, MissionVisual, PageHero } from "@/components/site/blocks";
+import { Container, MissionVisual, PageHero, VideoPlayer } from "@/components/site/blocks";
 import { media, missions, profile } from "@/data/profile";
 
 export const Route = createFileRoute("/missions")({
@@ -75,6 +75,13 @@ function MissionsPage() {
                       </span>
                     ))}
                   </div>
+                  {m.videos && m.videos.length > 0 && (
+                    <div className="mt-10 grid gap-6 sm:grid-cols-2">
+                      {m.videos.map((v) => (
+                        <VideoPlayer key={v.src} src={v.src} poster={v.poster} title={v.title} caption={v.caption} aspect="aspect-video" />
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
