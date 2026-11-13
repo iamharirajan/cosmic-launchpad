@@ -1,11 +1,14 @@
-import { Environment, Lightformer, Stars } from "@react-three/drei";
+import { Environment, Lightformer, PerformanceMonitor, Stars } from "@react-three/drei";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { Suspense, useEffect, useMemo, useRef } from "react";
+import { Bloom, BrightnessContrast, EffectComposer, HueSaturation, ToneMapping, Vignette } from "@react-three/postprocessing";
+import { ToneMappingMode } from "postprocessing";
+import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 
 import { Earth, SUN_DIR } from "./Earth";
 import { LaunchPad, createSkyMaterial } from "./LaunchPad";
 import { ShuttleStack, createStackLayout } from "./Shuttle";
+import { QUALITY, pickTier, readDeviceHints, type QualitySettings } from "./quality";
 import { Smoke, type Emitter } from "./Smoke";
 import {
   IGNITION_AT,
@@ -35,7 +38,7 @@ const tmpV = new THREE.Vector3();
 const tmpV2 = new THREE.Vector3();
 const lookTarget = new THREE.Vector3();
 
-function Scene({ onReady }: { onReady: () => void }) {
+function Scene({ onReady, quality }: { onReady: () => void; quality: QualitySettings }) {
   const { camera, scene } = useThree();
   const smoothP = useRef(launchState.progress);
 
@@ -57,6 +60,8 @@ function Scene({ onReady }: { onReady: () => void }) {
   const emitters = useRef<Emitter[]>([
     { position: new THREE.Vector3(), direction: new THREE.Vector3(0, -1, 0) },
     { position: new THREE.Vector3(), direction: new THREE.Vector3(0, -1, 0) },
+    // main-engine start: steam from the sound-suppression water under the orbiter
+    { position: new THREE.Vector3(), direction: new THREE.Vector3(0, -1, 0), weight: 0 },
   ]);
 
   const skyMat = useMemo(createSkyMaterial, []);
@@ -91,7 +96,9 @@ function Scene({ onReady }: { onReady: () => void }) {
     const srbOn = smooth(LIFTOFF_AT - 0.02, LIFTOFF_AT, p) * (1 - smooth(0.04, 0.08, b));
     ssmeThrust.current = ssmeOn;
     srbThrust.current = srbOn * (inSpace ? 0.75 : 1);
-    smokeRate.current = inSpace ? 0 : srbOn * (1 - smooth(0.55, 1, a) * 0.85) + ssmeOn * 0.15;
+    const steam = ssmeOn * (1 - smooth(0, 0.12, a));
+    smokeRate.current = inSpace ? 0 : srbOn * (1 - smooth(0.55, 1, a) * 0.85) + steam * 0.45;
+    emitters.current[2]!.weight = steam * (1 - srbOn * 0.6);
 
     // --- Stack transform ----------------------------------------------------
     const st = stack.current;
@@ -129,6 +136,7 @@ function Scene({ onReady }: { onReady: () => void }) {
       const dir = tmpV2.set(0, -1, 0).applyQuaternion(st.quaternion);
       emitters.current[0]!.position.copy(layout.srbL).setY(layout.srbL.y - 0.1).applyMatrix4(st.matrixWorld);
       emitters.current[1]!.position.copy(layout.srbR).setY(layout.srbR.y - 0.1).applyMatrix4(st.matrixWorld);
+      emitters.current[2]!.position.set(0, layout.srbL.y + 0.25, 0.55).applyMatrix4(st.matrixWorld);
       emitters.current.forEach((e) => e.direction.copy(dir));
 
       if (engineLight.current) {
@@ -208,7 +216,7 @@ function Scene({ onReady }: { onReady: () => void }) {
         castShadow
         intensity={2.6}
         color="#fff1dc"
-        shadow-mapSize={[2048, 2048]}
+        shadow-mapSize={[quality.shadowMapSize, quality.shadowMapSize]}
         shadow-camera-left={-12}
         shadow-camera-right={12}
         shadow-camera-top={12}
@@ -223,8 +231,8 @@ function Scene({ onReady }: { onReady: () => void }) {
       </Environment>
 
       <group ref={ground}>
-        <LaunchPad />
-        <Smoke emittersRef={emitters} rateRef={smokeRate} />
+        <LaunchPad trees={quality.trees} />
+        <Smoke emittersRef={emitters} rateRef={smokeRate} count={quality.smokeParticles} />
       </group>
 
       <group ref={space} visible={false}>
@@ -263,6 +271,10 @@ function ReadyMarker({ onReady }: { onReady: () => void }) {
 export default function LaunchCanvas() {
   const wrapper = useRef<HTMLDivElement>(null);
   const markReady = () => wrapper.current?.setAttribute("data-scene-ready", "true");
+  // Phones get the light tier, laptops/desktops the full one; the monitor then adapts resolution to measured FPS.
+  const quality = useMemo(() => QUALITY[pickTier(readDeviceHints())], []);
+  const deviceDpr = typeof window === "undefined" ? 1 : window.devicePixelRatio || 1;
+  const [dpr, setDpr] = useState(() => Math.min(deviceDpr, quality.maxDpr));
   useEffect(() => {
     if (import.meta.env.DEV) (window as unknown as { __launch: typeof launchState }).__launch = launchState;
   }, []);
@@ -270,15 +282,28 @@ export default function LaunchCanvas() {
   return (
     <div ref={wrapper} className="absolute inset-0">
       <Canvas
-        shadows
-        dpr={[1, 1.75]}
+        shadows="soft"
+        dpr={dpr}
         camera={{ fov: 38, near: 0.1, far: 4000, position: [10, 3, 16] }}
-        gl={{ antialias: true, toneMapping: THREE.ACESFilmicToneMapping, toneMappingExposure: 1.05 }}
+        gl={{ antialias: false, powerPreference: "high-performance", stencil: false }}
       >
+        <PerformanceMonitor
+          onDecline={() => setDpr((d) => Math.max(quality.minDpr, +(d * 0.8).toFixed(2)))}
+          onIncline={() => setDpr((d) => Math.min(Math.min(deviceDpr, quality.maxDpr), +(d * 1.15).toFixed(2)))}
+          flipflops={4}
+          onFallback={() => setDpr(quality.minDpr)}
+        />
         <color attach="background" args={["#000000"]} />
-        <Scene onReady={markReady} />
+        <Scene onReady={markReady} quality={quality} />
+        <EffectComposer multisampling={quality.msaa} enableNormalPass={false}>
+          {/* only HDR highlights (engine plumes, sun glint) cross the threshold */}
+          <Bloom mipmapBlur luminanceThreshold={1.05} luminanceSmoothing={0.25} intensity={0.85} radius={0.7} />
+          <HueSaturation saturation={0.08} />
+          <BrightnessContrast contrast={0.06} />
+          <ToneMapping mode={ToneMappingMode.ACES_FILMIC} />
+          <Vignette offset={0.32} darkness={0.5} />
+        </EffectComposer>
       </Canvas>
     </div>
   );
 }
-
