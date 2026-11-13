@@ -131,14 +131,23 @@ export function Smoke({ emittersRef, rateRef }: SmokeProps) {
       let vx = vel[j]!;
       let vy = vel[j + 1]!;
       let vz = vel[j + 2]!;
-      // Ground deflection: plume hitting the pad spreads sideways into a billowing cloud.
-      if (y < -0.75) {
-        const len = Math.hypot(vx, vz) || 1;
+      // Deflection: most exhaust runs down the flame trench (along z) and billows out of both ends;
+      // a share splashes across the launch platform deck.
+      const onDeck = i % 3 === 0;
+      const floor = onDeck ? 0.08 : -0.85;
+      if (y < floor) {
         const down = Math.abs(vy);
-        vx = (vx / len) * down * 1.3 + vx * 0.3 + (Math.random() - 0.5) * 3;
-        vz = (vz / len) * down * 1.3 + vz * 0.3 + (Math.random() - 0.5) * 3;
+        if (onDeck) {
+          const len = Math.hypot(vx, vz) || 1;
+          vx = (vx / len) * down * 1.1 + (Math.random() - 0.5) * 3;
+          vz = (vz / len) * down * 1.1 + (Math.random() - 0.5) * 3;
+        } else {
+          const side = i % 2 === 0 ? 1 : -1;
+          vz = side * (down * 1.7 + 2 + Math.random() * 2);
+          vx = (Math.random() - 0.5) * 2.5;
+        }
         vy = 0.4 + Math.random() * 0.6;
-        y = -0.75;
+        y = floor;
       }
       const drag = Math.exp(-1.4 * dt);
       vx *= drag;
