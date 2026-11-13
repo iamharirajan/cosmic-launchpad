@@ -225,7 +225,7 @@ export function HomeSections() {
           <SectionHeading index="08" eyebrow="Open channel" title="Contact" />
           <div className="mt-10 grid gap-px bg-line sm:grid-cols-2 lg:grid-cols-6">
             {channels.map((c, i) => (
-              <div key={c.title} className={cn("flex flex-col", i < 2 ? "lg:col-span-3" : "lg:col-span-2", i === 4 && "sm:col-span-2")} data-card="channel" data-y=" p-6 backdrop-blur-sm">
+              <div key={c.title} className={cn("flex flex-col bg-background/85 p-6 backdrop-blur-sm", i < 2 ? "lg:col-span-3" : "lg:col-span-2", i === 4 && "sm:col-span-2 lg:col-span-2")}>
                 <c.icon className="h-5 w-5 text-signal" />
                 <p className="eyebrow mt-4 text-muted-foreground">// {c.eyebrow}</p>
                 <p className="mt-2 font-display text-2xl font-bold uppercase">{c.title}</p>
