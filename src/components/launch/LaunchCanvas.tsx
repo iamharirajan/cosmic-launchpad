@@ -4,9 +4,8 @@ import { Suspense, useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 
 import { Earth, SUN_DIR } from "./Earth";
-import { Flame } from "./Flame";
 import { LaunchPad, createSkyMaterial } from "./LaunchPad";
-import { Booster, ExternalTank, Orbiter } from "./Shuttle";
+import { ShuttleStack, createStackLayout } from "./Shuttle";
 import { Smoke, type Emitter } from "./Smoke";
 import {
   IGNITION_AT,
@@ -22,10 +21,6 @@ import {
 const ASCENT_HEIGHT = 75;
 const MAX_TILT = 0.55;
 const SCROLL_DAMP = 4.5;
-const SRB_X = 0.66;
-const ORBITER_Z = 0.86;
-const ORBITER_BASE = 0.35;
-const SRB_NOZZLE_Y = -0.3;
 
 const PAD_SUN = new THREE.Vector3(-0.55, 0.32, 0.78).normalize();
 
@@ -54,6 +49,7 @@ function Scene({ onReady }: { onReady: () => void }) {
   const sun = useRef<THREE.DirectionalLight>(null);
   const hemi = useRef<THREE.HemisphereLight>(null);
   const engineLight = useRef<THREE.PointLight>(null);
+  const layout = useMemo(createStackLayout, []);
 
   const srbThrust = useRef(0);
   const ssmeThrust = useRef(0);
@@ -117,22 +113,22 @@ function Scene({ onReady }: { onReady: () => void }) {
       const sepK = inSpace ? srbSep : 0;
       const etK = inSpace ? etSep : 0;
       if (srbL.current && srbR.current) {
-        srbL.current.position.set(-SRB_X - 2.6 * sepK, -4.5 * Math.pow(sepK, 1.4), 0.4 * sepK);
+        srbL.current.position.copy(layout.srbL).add(tmpV.set(-2.6 * sepK, -4.5 * Math.pow(sepK, 1.4), 0.4 * sepK));
         srbL.current.rotation.set(0, 0, 0.9 * sepK);
-        srbR.current.position.set(SRB_X + 2.6 * sepK, -4.5 * Math.pow(sepK, 1.4), -0.4 * sepK);
+        srbR.current.position.copy(layout.srbR).add(tmpV.set(2.6 * sepK, -4.5 * Math.pow(sepK, 1.4), -0.4 * sepK));
         srbR.current.rotation.set(0, 0, -0.9 * sepK);
         srbL.current.visible = srbR.current.visible = sepK < 0.995;
       }
       if (tank.current) {
-        tank.current.position.set(0, -2.2 * etK, -3.2 * etK);
+        tank.current.position.copy(layout.tank).add(tmpV.set(0, -2.2 * etK, -3.2 * etK));
         tank.current.rotation.set(-0.5 * etK, 0, 0.2 * etK);
         tank.current.visible = etK < 0.995;
       }
 
       // smoke emitters at the booster nozzles in world space
       const dir = tmpV2.set(0, -1, 0).applyQuaternion(st.quaternion);
-      emitters.current[0]!.position.set(-SRB_X, SRB_NOZZLE_Y, 0).applyMatrix4(st.matrixWorld);
-      emitters.current[1]!.position.set(SRB_X, SRB_NOZZLE_Y, 0).applyMatrix4(st.matrixWorld);
+      emitters.current[0]!.position.copy(layout.srbL).setY(layout.srbL.y - 0.1).applyMatrix4(st.matrixWorld);
+      emitters.current[1]!.position.copy(layout.srbR).setY(layout.srbR.y - 0.1).applyMatrix4(st.matrixWorld);
       emitters.current.forEach((e) => e.direction.copy(dir));
 
       if (engineLight.current) {
@@ -193,6 +189,11 @@ function Scene({ onReady }: { onReady: () => void }) {
       camera.position.y += py * (1 + back * 3);
       lookTarget.set(sp.x, sp.y + 1.5 * (1 - back), 0).lerp(tmpV.set(sp.x * 0.5 - 5, -10, -6), back * 0.55);
     }
+    if (launchState.inspect) {
+      const [ix, iy, iz] = launchState.inspect;
+      camera.position.set(sp.x + ix, sp.y + iy, sp.z + iz);
+      lookTarget.set(sp.x, sp.y + 2.4, sp.z);
+    }
     camera.lookAt(lookTarget);
   });
 
@@ -235,41 +236,17 @@ function Scene({ onReady }: { onReady: () => void }) {
       </group>
 
       <group ref={stack}>
-        <group ref={tank} position={[0, 0.15, 0]}>
-          <ExternalTank />
-        </group>
-        <group ref={srbL} position={[-SRB_X, 0, 0]}>
-          <Booster />
-          <Flame position={[0, -0.28, 0]} length={6} radius={0.25} intensityRef={srbThrust} />
-        </group>
-        <group ref={srbR} position={[SRB_X, 0, 0]}>
-          <Booster />
-          <Flame position={[0, -0.28, 0]} length={6} radius={0.25} intensityRef={srbThrust} />
-        </group>
-        <group position={[0, ORBITER_BASE, ORBITER_Z]}>
-          <Suspense fallback={null}>
-            <Orbiter />
-            <ReadyMarker onReady={onReady} />
-          </Suspense>
-          {[
-            [0, 0.2, 0.32],
-            [-0.2, -0.05, 0.12],
-            [0.2, -0.05, 0.12],
-          ].map((pos, i) => (
-            <Flame
-              key={i}
-              position={pos as [number, number, number]}
-              length={2.4}
-              radius={0.09}
-              spread={1.6}
-              core="#f4f7ff"
-              mid="#a9c6ff"
-              tail="#ff7a3c"
-              gain={0.4}
-              intensityRef={ssmeThrust}
-            />
-          ))}
-        </group>
+        <Suspense fallback={null}>
+          <ShuttleStack
+            tankRef={tank}
+            srbLRef={srbL}
+            srbRRef={srbR}
+            layout={layout}
+            srbThrust={srbThrust}
+            ssmeThrust={ssmeThrust}
+          />
+          <ReadyMarker onReady={onReady} />
+        </Suspense>
       </group>
     </>
   );
