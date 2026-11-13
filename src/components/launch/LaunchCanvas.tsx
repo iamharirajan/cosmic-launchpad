@@ -265,6 +265,7 @@ function Scene({ onReady }: { onReady: () => void }) {
               core="#f4f7ff"
               mid="#a9c6ff"
               tail="#ff7a3c"
+              gain={0.4}
               intensityRef={ssmeThrust}
             />
           ))}

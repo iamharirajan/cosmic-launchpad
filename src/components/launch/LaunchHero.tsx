@@ -19,8 +19,8 @@ import {
 const LaunchCanvas = lazy(() => import("./LaunchCanvas"));
 
 const captions = [
-  { from: 0.075, to: 0.19, stage: "Ignition", title: "From concept to hot-fire", body: "Every nozzle, injector and pyro valve starts as a SolidWorks model — then it has to survive the flame." },
-  { from: 0.19, to: 0.31, stage: "Liftoff", title: "Rhumi Twin — flight proven", body: "Designed the Rhumi Twin rocket, successfully launched by Space Zone Aerospace." },
+  { from: 0.075, to: 0.18, stage: "T−0 · Ignition", title: "From concept to hot-fire", body: "Every nozzle, injector and pyro valve starts as a SolidWorks model — then it has to survive the flame." },
+  { from: 0.18, to: 0.31, stage: "Liftoff · Tower clear", title: "Rhumi Twin — flight proven", body: "Designed the Rhumi Twin rocket, successfully launched by Space Zone Aerospace." },
   { from: 0.31, to: 0.42, stage: "Max Q", title: "Built to take the load", body: "Vertical and horizontal test beds engineered to hold full engine thrust through static fire." },
   { from: 0.5, to: 0.66, stage: "SRB Separation", title: "Flight-critical hardware", body: "Fins, airframe sections and fuel grains — production-ready drawings with tolerances and material callouts." },
   { from: 0.7, to: 0.85, stage: "MECO · ET Sep", title: "Getting hardware to the pad", body: "DFM reviews, BOMs, procurement and vendor coordination — the work behind every launch." },

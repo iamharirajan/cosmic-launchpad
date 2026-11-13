@@ -42,6 +42,7 @@ type FlameProps = {
   tail?: string;
   position?: [number, number, number];
   spread?: number;
+  gain?: number;
 };
 
 /** Additive exhaust plume hanging below a nozzle at the local origin. */
@@ -54,6 +55,7 @@ export function Flame({
   tail = "#ff4a10",
   position = [0, 0, 0],
   spread = 1.9,
+  gain = 1,
 }: FlameProps) {
   const group = useRef<THREE.Group>(null);
   const layers = useMemo(() => {
@@ -93,7 +95,7 @@ export function Flame({
     const k = intensityRef.current;
     materials.forEach((m, i) => {
       m.uniforms["uTime"]!.value = state.clock.elapsedTime;
-      m.uniforms["uIntensity"]!.value = k * (i === 0 ? 1.2 : 0.75);
+      m.uniforms["uIntensity"]!.value = k * gain * (i === 0 ? 1.2 : 0.75);
     });
     if (group.current) {
       const s = 0.25 + 0.75 * k;
