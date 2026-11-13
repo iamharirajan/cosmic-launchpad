@@ -28,3 +28,11 @@ use the editor.
   own key and store it in Secrets.
 - **Secrets.** Lovable manages them. Do not put secret values in the repo.
 <!-- LOVABLE:END -->
+
+## Project rules
+
+- Site content (profile, missions, media URLs) lives in `src/data/profile.ts`; pages read from it so copy changes happen in one place.
+- The home hero is a scroll-driven R3F scene (`src/components/launch/`): `timeline.ts` is the pure scroll→mission-state module (tested), `LaunchCanvas.tsx` is lazy-loaded behind `ClientOnly` so three.js never runs during SSR.
+- Draco decoder files are self-hosted in `public/draco/` because the shuttle GLB is Draco-compressed and drei would otherwise fetch a decoder from a third-party CDN.
+- Media (videos, photos, GLB, Earth textures, résumé) is hosted via `lovable-assets` pointers under `src/assets/`; never commit the binaries.
+- Dev-only hook: `window.__launch` (`{ progress, snap }`) — set `snap = true` to skip scroll smoothing when screenshotting launch stages.
