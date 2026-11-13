@@ -9,7 +9,7 @@ export const Route = createFileRoute("/media")({
   head: () => ({
     meta: [
       { title: "Multimedia — Rhumi Twin Launch Videos & Images · Harirajan M" },
-      { name: "description", content: "Watch the Rhumi Twin liftoff and an interview from the design office, and browse launch photos." },
+      { name: "description", content: "Watch the Rhumi Twin liftoff, engine hot fires on the vertical and horizontal test beds, and an interview from the design office." },
       { property: "og:title", content: "Multimedia — Harirajan M" },
       { property: "og:description", content: "Launch videos, interviews and image gallery." },
       { property: "og:type", content: "website" },
@@ -25,7 +25,7 @@ function MediaPage() {
       <PageHero
         eyebrow="Multimedia"
         title={<>Images & video</>}
-        intro="Launch-day footage, behind-the-scenes from the design office and a gallery of launch photos."
+        intro="Launch-day footage, engine hot fires on the test beds, behind-the-scenes from the design office and a gallery of launch photos."
         image={media.liftoffPoster}
       />
 
@@ -39,9 +39,31 @@ function MediaPage() {
         </Container>
       </section>
 
+      <section className="border-t border-line py-24">
+        <Container>
+          <SectionHeading index="02" eyebrow="Hot fire · Test beds" title="Test bed runs" />
+          <div className="mt-12 grid gap-10 md:grid-cols-2">
+            <VideoPlayer
+              src={media.testBedVerticalVideo}
+              poster={media.testBedVerticalPoster}
+              title="Vertical test bed — hot fire"
+              caption="Engine fired vertically on the stand."
+              aspect="aspect-video"
+            />
+            <VideoPlayer
+              src={media.testBedHorizontalVideo}
+              poster={media.testBedHorizontalPoster}
+              title="Horizontal test bed — hot fire"
+              caption="Engine fired horizontally on the thrust stand."
+              aspect="aspect-video"
+            />
+          </div>
+        </Container>
+      </section>
+
       <section className="border-t border-line bg-surface py-24">
         <Container>
-          <SectionHeading index="02" eyebrow="Image of the mission" title="Gallery" />
+          <SectionHeading index="03" eyebrow="Image of the mission" title="Gallery" />
           <div className="mt-10 grid auto-rows-[420px] gap-3 md:grid-cols-3">
             {gallery.map((g) => (
               <figure key={g.caption} className="group relative overflow-hidden">
@@ -59,7 +81,7 @@ function MediaPage() {
       <section className="py-24">
         <Container className="flex flex-col justify-between gap-8 md:flex-row md:items-end">
           <div>
-            <p className="eyebrow"><span className="text-signal">03</span> Channel</p>
+            <p className="eyebrow"><span className="text-signal">04</span> Channel</p>
             <h2 className="display-lg mt-3">More on Nebula Spacetime</h2>
             <p className="mt-4 max-w-xl text-muted-foreground">Space science, rocket technology and the universe — in videos and Shorts.</p>
           </div>
