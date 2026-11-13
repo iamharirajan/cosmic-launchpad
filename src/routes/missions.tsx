@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Lock } from "lucide-react";
 
 import { Container, MissionVisual, PageHero } from "@/components/site/blocks";
-import { media, missions } from "@/data/profile";
+import { media, missions, profile } from "@/data/profile";
 
 export const Route = createFileRoute("/missions")({
   head: () => ({
