@@ -9,3 +9,5 @@
 - [ ] Add a video like the one on https://iamharirajan.github.io/ (use it as reference)
 - [x] Remove the résumé (download links/buttons) from the site
 - [x] Remove the caption text shown while scrolling through ignition / max Q in the home launch section
+- [x] Rearrange the home page to follow the live site's order (launch + about-me intro, then intro video, projects, experience, skills, education, achievements, YouTube, contact)
+- [ ] Make the shuttle, launch pad and surroundings more realistic, like https://youtu.be/OnoNITE-CLc
