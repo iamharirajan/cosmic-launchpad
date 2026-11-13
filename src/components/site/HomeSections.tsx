@@ -2,6 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { ArrowRight, Award, GraduationCap, Instagram, Linkedin, Lock, Mail, MapPin, Youtube } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { certifications, education, experience, media, missions, profile, skills } from "@/data/profile";
 import { Container, MissionCard, SectionHeading, VideoPlayer } from "./blocks";
 
@@ -28,7 +29,7 @@ function PortraitFrame({ src, poster, title, aspect }: { src: string; poster: st
       src={src}
       poster={poster}
       title={title}
-      aspect={cn2(aspect, "max-h-[78vh]")}
+      aspect={cn(aspect, "max-h-[78vh]")}
       fit="contain"
       framed
       showCaption={false}
@@ -36,8 +37,6 @@ function PortraitFrame({ src, poster, title, aspect }: { src: string; poster: st
     />
   );
 }
-
-const cn2 = (...c: string[]) => c.join(" ");
 
 export function HomeSections() {
   return (

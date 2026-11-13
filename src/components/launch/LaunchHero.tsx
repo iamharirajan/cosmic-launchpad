@@ -10,6 +10,8 @@ import {
   windowOpacity,
 } from "./timeline";
 
+const heroChips = ["SolidWorks · CATIA V5", "Rhumi Twin Rocket", "Static Fire Testing", "Madurai, India"];
+
 const LaunchCanvas = lazy(() => import("./LaunchCanvas"));
 
 const captions = [
@@ -75,25 +77,41 @@ export function LaunchHero() {
           style={{ opacity: introOpacity }}
         >
           <div
-            className="mx-auto w-full max-w-[1440px] px-5 pb-28 md:px-10 md:pb-28"
+            className="mx-auto w-full max-w-[1440px] px-5 pb-20 md:px-10 md:pb-24"
             style={{ pointerEvents: introOpacity > 0.5 ? "auto" : "none" }}
           >
             <p className="eyebrow animate-rise flex items-center gap-2 text-foreground/80">
               <span className="animate-blink inline-block h-2 w-2 rounded-full bg-signal" />
-              Mission status: active · {profile.company}
+              Mission status: active · Junior Design Engineer
             </p>
-            <h1 className="display-xl animate-rise mt-4 max-w-4xl [animation-delay:120ms]">
+            <p className="animate-rise mt-3 font-mono text-[0.7rem] uppercase tracking-[0.22em] text-signal [animation-delay:60ms]">
+              // AE-Design · Propulsion systems
+            </p>
+            <h1 className="display-xl animate-rise mt-3 max-w-4xl [animation-delay:120ms]">
               Harirajan <span className="text-signal">M</span>
             </h1>
-            <p className="animate-rise mt-5 max-w-xl text-lg text-foreground/85 [animation-delay:240ms] md:text-xl">
-              Aerospace & propulsion design engineer. I design rocket and missile hardware — from nozzles to airframes — and see it through to hot-fire.
+            <p className="animate-rise mt-3 font-display text-xl font-semibold uppercase tracking-wide text-foreground [animation-delay:180ms] md:text-2xl">
+              {profile.role}
             </p>
-            <div className="animate-rise mt-8 flex flex-wrap gap-3 [animation-delay:360ms]">
-              <Button asChild variant="signal" size="xl">
-                <Link to="/missions">Explore missions</Link>
+            <p className="animate-rise mt-4 max-w-2xl text-base text-foreground/85 [animation-delay:240ms] md:text-lg">
+              {profile.summary} {profile.cycle}
+            </p>
+            <ul className="animate-rise mt-5 flex flex-wrap gap-2 [animation-delay:300ms]">
+              {heroChips.map((c) => (
+                <li key={c} className="border border-foreground/25 bg-background/40 px-3 py-1 font-mono text-[0.65rem] uppercase tracking-[0.18em] text-foreground/90 backdrop-blur-sm">
+                  {c}
+                </li>
+              ))}
+            </ul>
+            <div className="animate-rise mt-6 flex flex-wrap gap-3 [animation-delay:360ms]">
+              <Button asChild variant="signal" size="lg">
+                <Link to="/contact">Contact mission control</Link>
               </Button>
-              <Button asChild variant="frame" size="xl">
-                <Link to="/media">Watch Rhumi Twin liftoff</Link>
+              <Button asChild variant="frame" size="lg">
+                <a href="#intro">▶ Watch intro</a>
+              </Button>
+              <Button asChild variant="frame" size="lg">
+                <a href="#missions">↓ View projects</a>
               </Button>
             </div>
           </div>
