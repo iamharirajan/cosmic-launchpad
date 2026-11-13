@@ -144,9 +144,6 @@ export function LaunchHero() {
               <Button asChild variant="signal" size="xl">
                 <Link to="/contact">Open a channel</Link>
               </Button>
-              <Button asChild variant="frame" size="xl">
-                <a href={profile.resumeUrl} target="_blank" rel="noreferrer">Download résumé</a>
-              </Button>
             </div>
           </div>
         </div>
