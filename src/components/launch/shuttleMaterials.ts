@@ -40,14 +40,14 @@ const ORBITER = /* glsl */ `
   vec2 tc = abs(n.y) > 0.6 ? p.xz : (abs(n.x) > abs(n.z) ? p.zy : p.xy);
   vec2 tf = abs(fract(tc / 0.16) - 0.5);
   float grout = smoothstep(0.43, 0.49, max(tf.x, tf.y));
-  vec3 tile = vec3(0.028 + 0.04 * hash2(floor(tc / 0.16)));
+  vec3 tile = vec3(0.022 + 0.025 * hash2(floor(tc / 0.16)));
   tile = mix(tile, vec3(0.11, 0.105, 0.1), grout * 0.55);
 
   // Upper white blankets: quilted, slightly off-white patches.
   vec2 bf = abs(fract(tc / 0.5) - 0.5);
   float quilt = smoothstep(0.4, 0.5, max(bf.x, bf.y));
   float patchTone = hash2(floor(tc / 0.5) + 7.0);
-  vec3 blanket = vec3(0.86, 0.85, 0.82) * (0.93 + 0.07 * patchTone) * (1.0 - 0.14 * quilt);
+  vec3 blanket = vec3(0.86, 0.85, 0.82) * (0.93 + 0.07 * patchTone) * (1.0 - 0.06 * quilt);
   // Payload bay door hinge lines and centre seam.
   float seam = step(2.6, p.y) * (band(abs(p.x), 0.0, 0.03) + band(abs(p.x), 1.75, 0.03)) * step(4.0, p.z) * step(p.z, 20.0);
   blanket *= 1.0 - 0.35 * clamp(seam, 0.0, 1.0);
@@ -75,7 +75,7 @@ const TANK = /* glsl */ `
   float big = vnoise(p * vec3(0.9, 0.9, 0.18));
   float fine = vnoise(p * 7.0);
   float streak = vnoise(vec3(atan(p.y + 3.3, p.x) * 6.0, p.z * 0.08, 1.0));
-  vec3 col = mix(vec3(0.62, 0.2, 0.025), vec3(0.8, 0.3, 0.04), big);
+  vec3 col = mix(vec3(0.78, 0.22, 0.018), vec3(0.95, 0.34, 0.035), big);
   col *= 0.86 + 0.14 * fine;
   col *= 0.92 + 0.08 * streak;
   // Intertank: ribbed, slightly darker band.
@@ -166,8 +166,8 @@ function makeLabelTextures() {
 export const MARKINGS = {
   sideZ: new THREE.Vector2(4.6, 10.0),
   sideY: new THREE.Vector2(1.55, 2.9),
-  wingX: new THREE.Vector2(4.4, 6.9),
-  wingZ: new THREE.Vector2(15.6, 18.1),
+  wingX: new THREE.Vector2(3.5, 5.5),
+  wingZ: new THREE.Vector2(17.2, 19.2),
 };
 
 export function createPartMaterial(kind: PartKind): THREE.Material {
