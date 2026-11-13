@@ -44,7 +44,7 @@ function MediaPage() {
           <SectionHeading index="02" eyebrow="Image of the mission" title="Gallery" />
           <div className="mt-10 grid auto-rows-[260px] gap-3 md:grid-cols-3">
             {gallery.map((g, i) => (
-              <figure key={g.caption} className={`group relative overflow-hidden ${i === 0 ? "md:col-span-1 md:row-span-2" : ""} ${i === 1 ? "md:col-span-2" : ""}`}>
+              <figure key={g.caption} className={`group relative overflow-hidden ${i === 0 ? "md:col-span-1 md:row-span-2" : ""} ${i === 1 || i === 5 ? "md:col-span-2" : ""}`}>
                 <img src={g.src} alt={g.caption} loading="lazy" className="hover-zoom h-full w-full object-cover" />
                 <figcaption className="absolute inset-x-0 bottom-0 bg-scrim p-4 pt-12">
                   <p className="font-display text-xl font-bold uppercase">{g.caption}</p>
