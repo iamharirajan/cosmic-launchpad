@@ -70,12 +70,16 @@ export function MissionVisual({
   if (mission.image) {
     if (fit === "contain")
       return (
-        <img
-          src={mission.image}
-          alt={mission.title}
-          loading={eager ? "eager" : "lazy"}
-          className={cn("relative block h-auto w-full", className)}
-        />
+        <div className={cn("absolute inset-0 flex flex-col items-center justify-center gap-4 bg-surface p-6 md:p-10", className)}>
+          <div className="grid-lines absolute inset-0 opacity-30" />
+          <img
+            src={mission.image}
+            alt={mission.title}
+            loading={eager ? "eager" : "lazy"}
+            className="relative w-full max-w-[560px] object-contain"
+          />
+          <p className="eyebrow relative max-w-[560px] text-center text-muted-foreground">{mission.details[0]}</p>
+        </div>
       );
     return (
       <img
