@@ -37,9 +37,6 @@ export function SiteFooter() {
           <p className="eyebrow mb-4">Comm Link</p>
           <a href={`mailto:${profile.email}`} className="break-all text-sm hover:text-signal">{profile.email}</a>
           <p className="mt-2 text-sm text-muted-foreground">{profile.location}</p>
-          <a href={profile.resumeUrl} target="_blank" rel="noreferrer" className="mt-4 inline-block font-mono text-xs uppercase tracking-[0.18em] text-signal hover:underline">
-            Download résumé ↗
-          </a>
         </div>
       </div>
       <div className="border-t border-line">

@@ -13,9 +13,6 @@ import {
 const LaunchCanvas = lazy(() => import("./LaunchCanvas"));
 
 const captions = [
-  { from: 0.075, to: 0.18, stage: "T−0 · Ignition", title: "Concept to hot-fire", body: "Junior Design Engineer at Space Zone Aerospace, designing rocket and missile hardware from concept to hot-fire." },
-  { from: 0.18, to: 0.31, stage: "Liftoff · Tower clear", title: "Rhumi twin rocket", body: "Designed the Rhumi twin rocket at Space Zone Aerospace — successfully launched by the company." },
-  { from: 0.31, to: 0.42, stage: "Max Q", title: "Vertical & horizontal test beds", body: "Developed both the vertical and horizontal test bed structures for rocket engine testing, and supported live static fire operations." },
   { from: 0.5, to: 0.66, stage: "SRB Separation", title: "Flight hardware design", body: "Nozzles, injectors, pyro valves, fins, airframes and fuel grains — production-ready drawings with tolerances and material callouts." },
   { from: 0.7, to: 0.85, stage: "MECO · ET Sep", title: "Manufacturing & prototyping", body: "Mechanical drawings to aerospace standards and DFM assessments before manufacturing release." },
 ];
@@ -143,9 +140,6 @@ export function LaunchHero() {
             <div className="mt-6 flex flex-wrap gap-3">
               <Button asChild variant="signal" size="xl">
                 <Link to="/contact">Open a channel</Link>
-              </Button>
-              <Button asChild variant="frame" size="xl">
-                <a href={profile.resumeUrl} target="_blank" rel="noreferrer">Download résumé</a>
               </Button>
             </div>
           </div>

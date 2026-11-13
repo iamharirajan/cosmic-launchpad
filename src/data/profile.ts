@@ -12,7 +12,9 @@ import testBedVerticalFire from "@/assets/media/test-bed-vertical-fire.mp4.asset
 import testBedVerticalPoster from "@/assets/media/test-bed-vertical-poster.jpg.asset.json";
 import testBedHorizontalFire from "@/assets/media/test-bed-horizontal-fire.mp4.asset.json";
 import testBedHorizontalPoster from "@/assets/media/test-bed-horizontal-poster.jpg.asset.json";
-import resume from "@/assets/media/resume.pdf.asset.json";
+import cubesatPrototypes from "@/assets/media/cubesat-prototype-models.jpg.asset.json";
+import solarCase from "@/assets/media/solar-case-cad-wide.jpg.asset.json";
+import solarCaseMultiview from "@/assets/media/solar-case-multiview.jpg.asset.json";
 
 export const profile = {
   name: "Harirajan M",
@@ -24,7 +26,6 @@ export const profile = {
   github: "https://iamharirajan.github.io",
   youtube: "https://www.youtube.com/@nebulaspacetime",
   instagram: "https://www.instagram.com/nebulaspacetime",
-  resumeUrl: resume.url,
   summary:
     "Junior Design Engineer at Space Zone Aerospace, designing rocket and missile hardware from concept to hot-fire. Designed the Rhumi twin rocket, successfully launched by the company, and developed the vertical and horizontal test beds.",
   cycle: "Hands-on across the full cycle: SolidWorks design, fabrication, assembly, and live static fire testing.",
@@ -43,6 +44,9 @@ export const media = {
   testBedVerticalPoster: testBedVerticalPoster.url,
   testBedHorizontalVideo: testBedHorizontalFire.url,
   testBedHorizontalPoster: testBedHorizontalPoster.url,
+  cubesatPrototypes: cubesatPrototypes.url,
+  solarCase: solarCase.url,
+  solarCaseMultiview: solarCaseMultiview.url,
   nebula: nebulaImg,
   earthNight: earthNightImg,
 };
@@ -65,6 +69,8 @@ export type Mission = {
   image?: string;
   /** Extra real photos, shown as an inset on the mission page. */
   images?: string[];
+  /** Show the photo at its true size on the mission page instead of stretching it. */
+  imageContain?: boolean;
   /** Real footage only. */
   videos?: MissionVideo[];
   status: string;
@@ -117,6 +123,8 @@ export const missions: Mission[] = [
       "3D printed structural frames to validate fit and assembly, cutting iteration time before machined production.",
     details: ["3D printed structural frames", "Fit and assembly validated before machined production"],
     tags: ["Ultimaker Cura", "PrusaSlicer", "3D Printing"],
+    image: cubesatPrototypes.url,
+    imageContain: true,
     status: "Complete",
   },
   {
@@ -127,6 +135,9 @@ export const missions: Mission[] = [
       "Designed a solar-powered mobile case using CATIA V5 Generative Shape Design (surface modeling) as part of the Naan Mudhalvan Program.",
     details: ["CATIA V5 Generative Shape Design (surface modeling)", "Part of the Naan Mudhalvan Program"],
     tags: ["CATIA V5", "Surface Modeling", "Naan Mudhalvan"],
+    image: solarCase.url,
+    images: [solarCaseMultiview.url],
+    imageContain: true,
     status: "Complete",
   },
 ];
@@ -167,5 +178,7 @@ export const gallery = [
   { src: liftoffPoster.url, caption: "Rhumi twin liftoff — launch footage", credit: "Space Zone Aerospace" },
   { src: testBedVertical.url, caption: "Vertical test bed — hot fire", credit: "Space Zone Aerospace" },
   { src: testBedHorizontal.url, caption: "Horizontal test bed — hot fire", credit: "Space Zone Aerospace" },
+  { src: cubesatPrototypes.url, caption: "CubeSat & NanoSat prototype models", credit: "Fit & assembly check" },
+  { src: solarCase.url, caption: "Solar-powered mobile case — CATIA V5 model", credit: "Naan Mudhalvan Program" },
   { src: interviewPoster.url, caption: "Mission briefing from the design office", credit: "Space Zone Aerospace" },
 ];

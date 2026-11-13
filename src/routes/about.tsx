@@ -1,7 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Award, GraduationCap } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
 import { Container, PageHero, SectionHeading } from "@/components/site/blocks";
 import { certifications, education, experience, media, profile, skills } from "@/data/profile";
 
@@ -42,9 +41,6 @@ function AboutPage() {
                 <p className="mt-4 eyebrow">Mission elapsed</p>
                 <p className="mt-1 font-mono">DEC 2025 — PRESENT</p>
               </div>
-              <Button asChild variant="signal" size="xl" className="w-full">
-                <a href={profile.resumeUrl} target="_blank" rel="noreferrer">Download résumé</a>
-              </Button>
             </div>
             <ol className="relative border-l border-line">
               {experience.map((e, i) => (

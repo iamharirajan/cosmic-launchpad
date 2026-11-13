@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { FileDown, Instagram, Linkedin, Mail, MapPin, Youtube } from "lucide-react";
+import { Instagram, Linkedin, Mail, MapPin, Youtube } from "lucide-react";
 
 import { Container, PageHero } from "@/components/site/blocks";
 import { media, profile } from "@/data/profile";
@@ -23,7 +23,6 @@ const channels = [
   { icon: Linkedin, label: "Professional network", title: "LinkedIn", value: "harirajan-m", href: profile.linkedin, cta: "Connect" },
   { icon: Youtube, label: "Broadcast channel", title: "YouTube", value: "@nebulaspacetime", href: profile.youtube, cta: "Subscribe" },
   { icon: Instagram, label: "Visual log", title: "Instagram", value: "@nebulaspacetime", href: profile.instagram, cta: "Follow" },
-  { icon: FileDown, label: "Mission dossier", title: "Résumé", value: "PDF · 1 page", href: profile.resumeUrl, cta: "Download" },
   { icon: MapPin, label: "Base of operations", title: "Location", value: profile.location, href: undefined, cta: undefined },
 ];
 
