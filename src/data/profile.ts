@@ -14,6 +14,7 @@ import testBedHorizontalFire from "@/assets/media/test-bed-horizontal-fire.mp4.a
 import testBedHorizontalPoster from "@/assets/media/test-bed-horizontal-poster.jpg.asset.json";
 import cubesatPrototypes from "@/assets/media/cubesat-prototype-models.jpg.asset.json";
 import solarCase from "@/assets/media/solar-case-cad.jpg.asset.json";
+import solarCaseMultiview from "@/assets/media/solar-case-multiview.jpg.asset.json";
 
 export const profile = {
   name: "Harirajan M",
@@ -45,6 +46,7 @@ export const media = {
   testBedHorizontalPoster: testBedHorizontalPoster.url,
   cubesatPrototypes: cubesatPrototypes.url,
   solarCase: solarCase.url,
+  solarCaseMultiview: solarCaseMultiview.url,
   nebula: nebulaImg,
   earthNight: earthNightImg,
 };
@@ -134,6 +136,7 @@ export const missions: Mission[] = [
     details: ["CATIA V5 Generative Shape Design (surface modeling)", "Part of the Naan Mudhalvan Program"],
     tags: ["CATIA V5", "Surface Modeling", "Naan Mudhalvan"],
     image: solarCase.url,
+    images: [solarCaseMultiview.url],
     imageContain: true,
     status: "Complete",
   },
