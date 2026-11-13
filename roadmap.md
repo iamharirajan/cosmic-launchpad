@@ -5,7 +5,7 @@
 - [x] Remove AI-generated photos from missions (and gallery) — misleading; use only real photos / no-photo cards
 - [x] Make the launch pad and surroundings realistic like the user's video (https://youtu.be/OnoNITE-CLc) and sample photo images12.jpg
 - [x] Remove the telemetry panel from the home launch section
-- [ ] Add the solar-powered mobile case photo (CATIA V5 screenshot) to MISSION-004
+- [x] Add the solar-powered mobile case photo (CATIA V5 screenshot) to MISSION-004
 - [ ] Add a video like the one on https://iamharirajan.github.io/ (use it as reference)
-- [ ] Remove the résumé (download links/buttons) from the site
-- [ ] Remove the caption text shown while scrolling through ignition / max Q in the home launch section
+- [x] Remove the résumé (download links/buttons) from the site
+- [x] Remove the caption text shown while scrolling through ignition / max Q in the home launch section
