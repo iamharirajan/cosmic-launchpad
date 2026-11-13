@@ -6,6 +6,8 @@ import liftoffVideo from "@/assets/media/rhumi-twin-liftoff.mp4.asset.json";
 import liftoffPoster from "@/assets/media/liftoff-poster.jpg.asset.json";
 import interviewVideo from "@/assets/media/engineer-interview.mp4.asset.json";
 import interviewPoster from "@/assets/media/interview-poster.jpg.asset.json";
+import testBedVertical from "@/assets/media/test-bed-vertical.jpg.asset.json";
+import testBedHorizontal from "@/assets/media/test-bed-horizontal.jpg.asset.json";
 import resume from "@/assets/media/resume.pdf.asset.json";
 
 export const profile = {
@@ -31,6 +33,8 @@ export const media = {
   liftoffPoster: liftoffPoster.url,
   interviewVideo: interviewVideo.url,
   interviewPoster: interviewPoster.url,
+  testBedVertical: testBedVertical.url,
+  testBedHorizontal: testBedHorizontal.url,
   nebula: nebulaImg,
   earthNight: earthNightImg,
 };
@@ -44,6 +48,8 @@ export type Mission = {
   tags: string[];
   /** Real photo only — leave empty rather than use an illustration. */
   image?: string;
+  /** Extra real photos, shown as an inset on the mission page. */
+  images?: string[];
   status: string;
 };
 
@@ -68,6 +74,8 @@ export const missions: Mission[] = [
       "Developed both the vertical and horizontal test bed structures for rocket engine testing, and supported live static fire operations.",
     details: ["Vertical and horizontal test beds for engine testing", "Supported live static fire operations"],
     tags: ["Structures", "Test Systems", "SolidWorks"],
+    image: testBedVertical.url,
+    images: [testBedVertical.url, testBedHorizontal.url],
     status: "Operational",
   },
   {
@@ -126,5 +134,7 @@ export const certifications = [
 export const gallery = [
   { src: rhumiLaunch.url, caption: "Rhumi twin rocket, off the pad", credit: "Space Zone Aerospace" },
   { src: liftoffPoster.url, caption: "Rhumi twin liftoff — launch footage", credit: "Space Zone Aerospace" },
+  { src: testBedVertical.url, caption: "Vertical test bed — hot fire", credit: "Space Zone Aerospace" },
+  { src: testBedHorizontal.url, caption: "Horizontal test bed — hot fire", credit: "Space Zone Aerospace" },
   { src: interviewPoster.url, caption: "Mission briefing from the design office", credit: "Space Zone Aerospace" },
 ];
