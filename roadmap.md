@@ -16,3 +16,4 @@
 - [ ] Realism pass on the launch scene: flame glow + lighting/haze/grading, denser smoke + ignition steam, busier tower & pad detail, moving ocean, marsh, trees and roads
 - [ ] Launch scene adapts quality per device (phones lighter, laptops/PCs full) and runs smoothly everywhere
 - [ ] Check every page layout on phone, laptop and PC sizes (incl. header wrapping at ~850px)
+- [ ] Make the climb more realistic and sharp (full-HD rendering, real-looking ascent motion, long exhaust trail)
