@@ -39,17 +39,17 @@ export function SiteHeader() {
         <Link to="/" className="flex items-center gap-3" onClick={() => setOpen(false)}>
           <Insignia className="h-10 w-10" />
           <span className="leading-none">
-            <span className="block font-display text-xl font-extrabold uppercase tracking-wide">Harirajan M</span>
+            <span className="block whitespace-nowrap font-display text-xl font-extrabold uppercase tracking-wide">Harirajan M</span>
             <span className="eyebrow block text-[0.6rem]">Aerospace Design</span>
           </span>
         </Link>
 
-        <nav className="hidden items-center gap-8 md:flex">
+        <nav className="hidden items-center gap-6 lg:flex xl:gap-8">
           {nav.map((item) => (
             <Link
               key={item.to}
               to={item.to}
-              className="font-display text-lg font-semibold uppercase tracking-wide text-foreground/80 transition-colors hover:text-foreground"
+              className="whitespace-nowrap font-display text-lg font-semibold uppercase tracking-wide text-foreground/80 transition-colors hover:text-foreground"
               activeProps={{ className: "text-foreground underline decoration-signal decoration-2 underline-offset-[10px]" }}
             >
               {item.label}
@@ -57,7 +57,7 @@ export function SiteHeader() {
           ))}
         </nav>
 
-        <div className="hidden md:block">
+        <div className="hidden xl:block">
           <Button asChild variant="signal" size="lg" className="rounded-none">
             <a href={`mailto:iamharirajan2002@gmail.com`}>Contact Mission Control</a>
           </Button>
@@ -66,7 +66,7 @@ export function SiteHeader() {
         <button
           type="button"
           aria-label={open ? "Close menu" : "Open menu"}
-          className="p-2 md:hidden"
+          className="p-2 lg:hidden"
           onClick={() => setOpen((v) => !v)}
         >
           {open ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
@@ -74,7 +74,7 @@ export function SiteHeader() {
       </div>
 
       {open && (
-        <nav className="border-t border-line bg-background px-5 pb-6 md:hidden">
+        <nav className="border-t border-line bg-background px-5 pb-6 lg:hidden">
           {nav.map((item) => (
             <Link
               key={item.to}
