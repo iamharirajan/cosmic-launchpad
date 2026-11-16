@@ -17,3 +17,4 @@
 - [ ] Launch scene adapts quality per device (phones lighter, laptops/PCs full) and runs smoothly everywhere
 - [ ] Check every page layout on phone, laptop and PC sizes (incl. header wrapping at ~850px)
 - [ ] Make the climb more realistic and sharp (full-HD rendering, real-looking ascent motion, long exhaust trail)
+- [ ] Push the pad, shuttle and surroundings toward "4K" realism (render at full screen resolution on 4K displays, finer trees/ocean, less cartoon look)

@@ -14,7 +14,7 @@ export type DeviceHints = {
 };
 
 export type QualitySettings = {
-  /** Max device pixel ratio the canvas renders at. */
+  /** Max device pixel ratio the canvas renders at (2 = native 4K on a 4K screen at 200% scaling). */
   maxDpr: number;
   /** Lowest DPR the adaptive monitor may step down to. */
   minDpr: number;
@@ -29,8 +29,8 @@ export type QualitySettings = {
 };
 
 export const QUALITY: Record<Tier, QualitySettings> = {
-  low: { maxDpr: 1.5, minDpr: 0.75, shadowMapSize: 1024, smokeParticles: 2000, trees: 320, trailParticles: 500, msaa: 0, oceanSegments: 1 },
-  high: { maxDpr: 2, minDpr: 1, shadowMapSize: 2048, smokeParticles: 4200, trees: 900, trailParticles: 1100, msaa: 4, oceanSegments: 1 },
+  low: { maxDpr: 1.5, minDpr: 0.75, shadowMapSize: 1024, smokeParticles: 2000, trees: 600, trailParticles: 500, msaa: 0, oceanSegments: 1 },
+  high: { maxDpr: 2, minDpr: 1, shadowMapSize: 2048, smokeParticles: 4200, trees: 1600, trailParticles: 1100, msaa: 4, oceanSegments: 1 },
 };
 
 /** Phones and weak machines get the light tier; laptops and desktops the full one. */
