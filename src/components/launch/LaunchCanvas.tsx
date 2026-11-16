@@ -154,7 +154,7 @@ function Scene({ onReady, quality }: { onReady: () => void; quality: QualitySett
 
       if (engineLight.current) {
         engineLight.current.position.set(0, -1.2, 0).applyMatrix4(st.matrixWorld);
-        engineLight.current.intensity = (srbThrust.current * 16 + ssmeOn * 4) * (0.85 + Math.random() * 0.3);
+        engineLight.current.intensity = (srbThrust.current * 10 + ssmeOn * 3) * (0.85 + Math.random() * 0.3);
       }
     }
 
@@ -223,6 +223,9 @@ function Scene({ onReady, quality }: { onReady: () => void; quality: QualitySett
       lookTarget.set(sp.x, sp.y + 2.4, sp.z);
     }
     camera.lookAt(lookTarget);
+    // portrait phones: widen the view so the stack and tower still fit across the narrow screen
+    const portrait = cam.aspect < 1 ? THREE.MathUtils.clamp(0.8 / cam.aspect, 1, 2.2) : 1;
+    if (portrait > 1) fov = Math.min(80, THREE.MathUtils.radToDeg(2 * Math.atan(Math.tan(THREE.MathUtils.degToRad(fov) / 2) * portrait)));
     if (Math.abs(cam.fov - fov) > 0.01) {
       cam.fov = fov;
       cam.updateProjectionMatrix();
@@ -247,7 +250,7 @@ function Scene({ onReady, quality }: { onReady: () => void; quality: QualitySett
         shadow-camera-bottom={-12}
         shadow-bias={-0.0004}
       />
-      <pointLight ref={engineLight} color="#ff9a3c" distance={40} decay={1.6} intensity={0} />
+      <pointLight ref={engineLight} color="#ffb366" distance={22} decay={1.8} intensity={0} />
       <Environment resolution={256}>
         <Lightformer intensity={2.2} position={[0, 6, 4]} scale={[12, 6, 1]} color="#fff4e6" />
         <Lightformer intensity={1.2} position={[-6, 2, -2]} rotation-y={Math.PI / 2} scale={[16, 3, 1]} color="#9fc0ff" />
