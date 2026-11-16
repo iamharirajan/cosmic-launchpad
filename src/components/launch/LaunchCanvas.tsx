@@ -105,7 +105,8 @@ function Scene({ onReady, quality }: { onReady: () => void; quality: QualitySett
     ssmeThrust.current = ssmeOn;
     srbThrust.current = srbOn * (inSpace ? 0.75 : 1);
     const steam = ssmeOn * (1 - smooth(0, 0.12, a));
-    smokeRate.current = inSpace ? 0 : srbOn * (1 - smooth(0.55, 1, a) * 0.85) + steam * 0.45;
+    // pad clouds only near the ground; higher up the Trail lays the exhaust column
+    smokeRate.current = inSpace ? 0 : srbOn * (1 - smooth(0.06, 0.22, a)) + steam * 0.45;
     emitters.current[2]!.weight = steam * (1 - srbOn * 0.6);
 
     // --- Stack transform ----------------------------------------------------

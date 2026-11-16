@@ -1,7 +1,7 @@
 import { useFrame } from "@react-three/fiber";
 import { useMemo, useRef } from "react";
 import * as THREE from "three";
-import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
+import { mergeGeometries, mergeVertices } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 
 import { launchState, smooth } from "./timeline";
 
@@ -42,14 +42,15 @@ function buildTrees(count: number) {
   const rand = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
   const lobes: THREE.BufferGeometry[] = [];
   for (let k = 0; k < 4; k++) {
-    const g = new THREE.IcosahedronGeometry(0.55 + rand() * 0.3, 0);
+    // indexed so the lobes shade smoothly (soft canopy, not faceted rocks)
+    const g = mergeVertices(new THREE.IcosahedronGeometry(0.55 + rand() * 0.3, 1).deleteAttribute("normal").deleteAttribute("uv"));
     const pos = g.getAttribute("position") as THREE.BufferAttribute;
     for (let v = 0; v < pos.count; v++) pos.setXYZ(v, pos.getX(v) * (0.85 + rand() * 0.3), pos.getY(v) * (0.7 + rand() * 0.3), pos.getZ(v) * (0.85 + rand() * 0.3));
     g.translate((rand() - 0.5) * 0.9, 0.35 + rand() * 0.35, (rand() - 0.5) * 0.9);
     lobes.push(g);
   }
+  lobes.forEach((g) => g.computeVertexNormals());
   const geometry = mergeGeometries(lobes)!;
-  geometry.computeVertexNormals();
   const mats: THREE.Matrix4[] = [];
   const colors: THREE.Color[] = [];
   const m = new THREE.Matrix4();
@@ -600,7 +601,7 @@ const skyFragment = /* glsl */ `
     float h = clamp(d.y, -0.2, 1.0);
     vec3 col = mix(uHorizon, uZenith, pow(smoothstep(-0.05, 0.9, h), 0.6));
     float sun = max(dot(d, uSun), 0.0);
-    col += vec3(1.0, 0.85, 0.65) * (pow(sun, 64.0) * 0.08 + pow(sun, 2000.0) * 1.5);
+    col += vec3(1.0, 0.88, 0.7) * (pow(sun, 64.0) * 0.06 + pow(sun, 6000.0) * 1.6);
     vec3 g = d * 900.0;
     vec3 cell = floor(g);
     float star = step(0.9985, hash(cell)) * smoothstep(0.45, 0.1, length(fract(g) - 0.5));

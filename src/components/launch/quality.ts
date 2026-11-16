@@ -29,8 +29,8 @@ export type QualitySettings = {
 };
 
 export const QUALITY: Record<Tier, QualitySettings> = {
-  low: { maxDpr: 1.5, minDpr: 0.75, shadowMapSize: 1024, smokeParticles: 2000, trees: 600, trailParticles: 500, msaa: 0, oceanSegments: 1 },
-  high: { maxDpr: 2, minDpr: 1, shadowMapSize: 2048, smokeParticles: 4200, trees: 1600, trailParticles: 1100, msaa: 4, oceanSegments: 1 },
+  low: { maxDpr: 1.5, minDpr: 0.75, shadowMapSize: 1024, smokeParticles: 2000, trees: 450, trailParticles: 500, msaa: 0, oceanSegments: 1 },
+  high: { maxDpr: 2, minDpr: 1, shadowMapSize: 2048, smokeParticles: 4200, trees: 1200, trailParticles: 1100, msaa: 4, oceanSegments: 1 },
 };
 
 /** Phones and weak machines get the light tier; laptops and desktops the full one. */
