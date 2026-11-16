@@ -21,14 +21,16 @@ export type QualitySettings = {
   shadowMapSize: number;
   smokeParticles: number;
   trees: number;
+  /** Puffs in the exhaust column left behind during the climb. */
+  trailParticles: number;
   /** Post-processing MSAA samples (0 = off). */
   msaa: number;
   oceanSegments: number;
 };
 
 export const QUALITY: Record<Tier, QualitySettings> = {
-  low: { maxDpr: 1.5, minDpr: 0.75, shadowMapSize: 1024, smokeParticles: 2000, trees: 320, msaa: 0, oceanSegments: 1 },
-  high: { maxDpr: 2, minDpr: 1, shadowMapSize: 2048, smokeParticles: 4200, trees: 900, msaa: 4, oceanSegments: 1 },
+  low: { maxDpr: 1.5, minDpr: 0.75, shadowMapSize: 1024, smokeParticles: 2000, trees: 320, trailParticles: 500, msaa: 0, oceanSegments: 1 },
+  high: { maxDpr: 2, minDpr: 1, shadowMapSize: 2048, smokeParticles: 4200, trees: 900, trailParticles: 1100, msaa: 4, oceanSegments: 1 },
 };
 
 /** Phones and weak machines get the light tier; laptops and desktops the full one. */
