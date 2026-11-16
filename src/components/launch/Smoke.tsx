@@ -117,7 +117,9 @@ export function Smoke({ emittersRef, rateRef, count: COUNT }: SmokeProps) {
 
   useFrame((state, rawDt) => {
     const dt = Math.min(rawDt, 0.05);
-    material.uniforms["uScale"]!.value = state.size.height * 0.55;
+    // keep puff size consistent when the tracking camera zooms
+    const fov = (state.camera as THREE.PerspectiveCamera).fov ?? 38;
+    material.uniforms["uScale"]!.value = (state.size.height * 0.189) / Math.tan(THREE.MathUtils.degToRad(fov) / 2);
     const emitters = emittersRef.current;
     const rate = rateRef.current;
     sim.carry += rate * dt * SPAWN_RATE;
