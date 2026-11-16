@@ -34,7 +34,10 @@ use the editor.
 - Site content (profile, missions, media URLs) lives in `src/data/profile.ts`; pages read from it so copy changes happen in one place.
 - The home hero is a scroll-driven R3F scene (`src/components/launch/`): `timeline.ts` is the pure scroll→mission-state module (tested), `LaunchCanvas.tsx` is lazy-loaded behind `ClientOnly` so three.js never runs during SSR.
 - The shuttle stack (orbiter, ET, SRBs) comes entirely from the GLB, split by glTF mesh index in `Shuttle.tsx` and painted by model-space shaders in `shuttleMaterials.ts` (the GLB has no textures); don't add procedural tank/booster stand-ins.
-- `LaunchPad.tsx` is the Pad 39A-style complex; deck/hardstand/ground heights are its exported constants, and smoke deflection in `Smoke.tsx` assumes them.
+- `LaunchPad.tsx` is the Pad 39A-style complex; deck/hardstand/ground heights are its exported constants, and smoke deflection in `Smoke.tsx` assumes them (flame trench runs along x).
+- Launch-scene budgets (DPR, shadow map, smoke/trail/tree counts, MSAA) come only from `quality.ts` tiers (tested); drei `PerformanceMonitor` adapts DPR at runtime — keeps phones smooth without a separate code path.
+- Scene output goes through one `EffectComposer` (bloom → grade → ACES `ToneMapping` → vignette); custom shaders emit linear HDR and flames clamp their output so bloom never sees Inf/NaN.
+- The ascent camera is a fixed ground tracking camera whose FOV zooms to keep the stack framed; point-sprite smoke (`Smoke.tsx`, `Trail.tsx`) scales `uScale` by camera FOV, so any new sprite effect must do the same.
 - Draco decoder files are self-hosted in `public/draco/` because the shuttle GLB is Draco-compressed and drei would otherwise fetch a decoder from a third-party CDN.
 - Media (videos, photos, GLB, Earth textures, résumé) is hosted via `lovable-assets` pointers under `src/assets/`; never commit the binaries.
 - Dev-only hook: `window.__launch` (`{ progress, snap, inspect }`) — `snap = true` skips scroll smoothing; `inspect = [x,y,z]` parks the camera at that offset from the stack for model close-ups.
