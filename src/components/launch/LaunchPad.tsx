@@ -1,7 +1,7 @@
 import { useFrame } from "@react-three/fiber";
 import { useMemo, useRef } from "react";
 import * as THREE from "three";
-import { mergeGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
+import { mergeGeometries, mergeVertices } from "three/examples/jsm/utils/BufferGeometryUtils.js";
 
 import { launchState, smooth } from "./timeline";
 
@@ -37,28 +37,39 @@ const MARSH_PONDS: [number, number, number, number][] = [
 
 /** Instanced scrub trees: squashed icosahedra scattered outside the pad clearing, avoiding the roads. */
 function buildTrees(count: number) {
-  const geometry = new THREE.IcosahedronGeometry(1, 1);
-  geometry.translate(0, 0.6, 0);
+  // one lumpy canopy = four jittered low-poly lobes, so the scrub reads as dense irregular vegetation, not blobs
+  let seed = 7;
+  const rand = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+  const lobes: THREE.BufferGeometry[] = [];
+  for (let k = 0; k < 4; k++) {
+    // indexed so the lobes shade smoothly (soft canopy, not faceted rocks)
+    const g = mergeVertices(new THREE.IcosahedronGeometry(0.55 + rand() * 0.3, 1).deleteAttribute("normal").deleteAttribute("uv"));
+    const pos = g.getAttribute("position") as THREE.BufferAttribute;
+    for (let v = 0; v < pos.count; v++) pos.setXYZ(v, pos.getX(v) * (0.85 + rand() * 0.3), pos.getY(v) * (0.7 + rand() * 0.3), pos.getZ(v) * (0.85 + rand() * 0.3));
+    g.translate((rand() - 0.5) * 0.9, 0.35 + rand() * 0.35, (rand() - 0.5) * 0.9);
+    lobes.push(g);
+  }
+  lobes.forEach((g) => g.computeVertexNormals());
+  const geometry = mergeGeometries(lobes)!;
   const mats: THREE.Matrix4[] = [];
   const colors: THREE.Color[] = [];
   const m = new THREE.Matrix4();
   const q = new THREE.Quaternion();
-  const palette = ["#2e4420", "#3a5228", "#27391b", "#485f2e", "#33482a"].map((c) => new THREE.Color(c));
-  let seed = 7;
-  const rand = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+  const palette = ["#263a19", "#2f4520", "#1f3014", "#3a5026", "#2b3d22", "#45552c"].map((c) => new THREE.Color(c));
   let guard = 0;
   while (mats.length < count && guard++ < count * 20) {
-    const r = 28 + Math.pow(rand(), 0.7) * 120;
+    const r = 27 + Math.pow(rand(), 0.8) * 125;
     const a = rand() * Math.PI * 2;
     const x = Math.cos(a) * r;
     const z = Math.sin(a) * r;
     if (z < COAST_Z + 6) continue; // keep the beach clear
     if (Math.abs(x * Math.cos(0.55) - z * Math.sin(0.55)) < 3 && z > 0) continue; // crawlerway
-    const sx = 0.6 + rand() * 1.1;
-    const sy = 0.5 + rand() * 0.9;
-    q.setFromEuler(new THREE.Euler(0, rand() * Math.PI, 0));
-    mats.push(m.compose(new THREE.Vector3(x, GROUND_Y, z), q, new THREE.Vector3(sx, sy, sx * (0.7 + rand() * 0.5))).clone());
-    colors.push(palette[Math.floor(rand() * palette.length)]!);
+    const sx = 0.45 + rand() * 0.7;
+    const sy = 0.35 + rand() * 0.55;
+    q.setFromEuler(new THREE.Euler(0, rand() * Math.PI * 2, 0));
+    mats.push(m.compose(new THREE.Vector3(x, GROUND_Y - 0.05, z), q, new THREE.Vector3(sx, sy, sx * (0.7 + rand() * 0.6))).clone());
+    const c = palette[Math.floor(rand() * palette.length)]!.clone().offsetHSL(0, 0, (rand() - 0.5) * 0.04);
+    colors.push(c);
   }
   return {
     geometry,
@@ -92,7 +103,7 @@ function canvasTexture(size: number, draw: (g: CanvasRenderingContext2D, s: numb
   t.colorSpace = THREE.SRGBColorSpace;
   t.wrapS = t.wrapT = THREE.RepeatWrapping;
   t.repeat.set(repeat, repeat);
-  t.anisotropy = 8;
+  t.anisotropy = 16;
   return t;
 }
 
@@ -590,7 +601,7 @@ const skyFragment = /* glsl */ `
     float h = clamp(d.y, -0.2, 1.0);
     vec3 col = mix(uHorizon, uZenith, pow(smoothstep(-0.05, 0.9, h), 0.6));
     float sun = max(dot(d, uSun), 0.0);
-    col += vec3(1.0, 0.85, 0.65) * (pow(sun, 64.0) * 0.08 + pow(sun, 2000.0) * 1.5);
+    col += vec3(1.0, 0.88, 0.7) * (pow(sun, 64.0) * 0.06 + pow(sun, 6000.0) * 1.6);
     vec3 g = d * 900.0;
     vec3 cell = floor(g);
     float star = step(0.9985, hash(cell)) * smoothstep(0.45, 0.1, length(fract(g) - 0.5));
@@ -649,12 +660,13 @@ const oceanFragment = /* glsl */ `
     freq[0] = 0.35; freq[1] = 0.6; freq[2] = 1.4; freq[3] = 2.6;
     for (int i = 0; i < 4; i++) {
       float ph = dot(dirs[i], p) * freq[i] + t * (1.2 + float(i) * 0.6);
-      s += dirs[i] * cos(ph) * freq[i] * (0.18 / (1.0 + float(i)));
+      s += dirs[i] * cos(ph) * freq[i] * (0.07 / (1.0 + float(i)));
     }
     return s;
   }
   void main() {
-    vec2 sl = waveSlope(vWorld.xz, uTime);
+    float camDist = length(cameraPosition - vWorld);
+    vec2 sl = waveSlope(vWorld.xz, uTime) * (1.0 - smoothstep(30.0, 260.0, camDist) * 0.8);
     vec3 n = normalize(vec3(-sl.x, 1.0, -sl.y));
     vec3 v = normalize(cameraPosition - vWorld);
     float fres = 0.04 + 0.96 * pow(1.0 - clamp(dot(n, v), 0.0, 1.0), 5.0);
@@ -662,8 +674,8 @@ const oceanFragment = /* glsl */ `
     vec3 water = mix(uShallow, uDeep, shore);
     vec3 col = mix(water, uSkyRefl, fres * 0.85);
     vec3 h = normalize(uSunDir + v);
-    float spec = pow(clamp(dot(n, h), 0.0, 1.0), 220.0);
-    col += vec3(1.0, 0.95, 0.85) * spec * 3.5;
+    float spec = pow(clamp(dot(n, h), 0.0, 1.0), 320.0);
+    col += vec3(1.0, 0.95, 0.85) * min(spec * 4.0, 6.0);
     gl_FragColor = vec4(col, 1.0);
     #include <tonemapping_fragment>
     #include <colorspace_fragment>

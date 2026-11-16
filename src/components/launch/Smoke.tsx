@@ -7,7 +7,7 @@ const SPAWN_RATE = 1250; // particles per second at full thrust
 const BUOYANCY = 0.95;
 const DRAG = 1.1;
 
-const vertex = /* glsl */ `
+export const smokeVertex = /* glsl */ `
   attribute float aSize;
   attribute float aAlpha;
   attribute float aHeat;
@@ -26,7 +26,7 @@ const vertex = /* glsl */ `
   }
 `;
 
-const fragment = /* glsl */ `
+export const smokeFragment = /* glsl */ `
   uniform vec3 uLit;
   uniform vec3 uShade;
   uniform vec3 uWarm;
@@ -101,8 +101,8 @@ export function Smoke({ emittersRef, rateRef, count: COUNT }: SmokeProps) {
   const material = useMemo(
     () =>
       new THREE.ShaderMaterial({
-        vertexShader: vertex,
-        fragmentShader: fragment,
+        vertexShader: smokeVertex,
+        fragmentShader: smokeFragment,
         transparent: true,
         depthWrite: false,
         uniforms: {
@@ -117,7 +117,9 @@ export function Smoke({ emittersRef, rateRef, count: COUNT }: SmokeProps) {
 
   useFrame((state, rawDt) => {
     const dt = Math.min(rawDt, 0.05);
-    material.uniforms["uScale"]!.value = state.size.height * 0.55;
+    // keep puff size consistent when the tracking camera zooms
+    const fov = (state.camera as THREE.PerspectiveCamera).fov ?? 38;
+    material.uniforms["uScale"]!.value = (state.size.height * 0.189) / Math.tan(THREE.MathUtils.degToRad(fov) / 2);
     const emitters = emittersRef.current;
     const rate = rateRef.current;
     sim.carry += rate * dt * SPAWN_RATE;

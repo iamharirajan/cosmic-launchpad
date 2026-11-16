@@ -101,7 +101,7 @@ export function LaunchHero() {
 
         {/* Scroll cue */}
         <div
-          className="pointer-events-none absolute bottom-8 left-1/2 hidden -translate-x-1/2 flex-col items-center gap-3 md:flex"
+          className="pointer-events-none absolute bottom-8 left-1/2 hidden -translate-x-1/2 flex-col items-center gap-3 md:flex [@media(max-height:760px)]:hidden!"
           style={{ opacity: introOpacity }}
         >
           <span className="eyebrow text-foreground/80">Scroll to launch</span>
@@ -117,7 +117,7 @@ export function LaunchHero() {
           return (
             <div
               key={c.title}
-              className="pointer-events-none absolute inset-y-0 left-0 flex items-center px-5 md:px-10"
+              className="pointer-events-none absolute inset-x-0 bottom-0 flex items-end px-5 pb-10 md:inset-x-auto md:inset-y-0 md:left-0 md:items-center md:px-10 md:pb-0"
               style={{ opacity: o, transform: `translateY(${(1 - o) * 20}px)` }}
             >
               <div className="max-w-md border-l-2 border-signal bg-background/55 py-5 pl-5 pr-6 backdrop-blur-sm">

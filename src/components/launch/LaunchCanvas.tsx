@@ -10,6 +10,7 @@ import { LaunchPad, createSkyMaterial } from "./LaunchPad";
 import { ShuttleStack, createStackLayout } from "./Shuttle";
 import { QUALITY, pickTier, readDeviceHints, type QualitySettings } from "./quality";
 import { Smoke, type Emitter } from "./Smoke";
+import { Trail } from "./Trail";
 import {
   IGNITION_AT,
   LIFTOFF_AT,
@@ -23,6 +24,11 @@ import {
 // Feel constants
 const ASCENT_HEIGHT = 75;
 const MAX_TILT = 0.55;
+const ROLL = Math.PI / 2; // roll program: orbiter swings to the downrange side (heads-down) after clearing the tower
+const BASE_FOV = 38;
+const MIN_FOV = 6;
+/** Half-height (world units) the tracking camera keeps framed around the stack. */
+const FRAME_HALF = 5.2;
 const SCROLL_DAMP = 4.5;
 
 const PAD_SUN = new THREE.Vector3(-0.55, 0.32, 0.78).normalize();
@@ -57,6 +63,8 @@ function Scene({ onReady, quality }: { onReady: () => void; quality: QualitySett
   const srbThrust = useRef(0);
   const ssmeThrust = useRef(0);
   const smokeRate = useRef(0);
+  const trailSource = useRef(new THREE.Vector3());
+  const trailActive = useRef(0);
   const emitters = useRef<Emitter[]>([
     { position: new THREE.Vector3(), direction: new THREE.Vector3(0, -1, 0) },
     { position: new THREE.Vector3(), direction: new THREE.Vector3(0, -1, 0) },
@@ -97,7 +105,8 @@ function Scene({ onReady, quality }: { onReady: () => void; quality: QualitySett
     ssmeThrust.current = ssmeOn;
     srbThrust.current = srbOn * (inSpace ? 0.75 : 1);
     const steam = ssmeOn * (1 - smooth(0, 0.12, a));
-    smokeRate.current = inSpace ? 0 : srbOn * (1 - smooth(0.55, 1, a) * 0.85) + steam * 0.45;
+    // pad clouds only near the ground; higher up the Trail lays the exhaust column
+    smokeRate.current = inSpace ? 0 : srbOn * (1 - smooth(0.06, 0.22, a)) + steam * 0.45;
     emitters.current[2]!.weight = steam * (1 - srbOn * 0.6);
 
     // --- Stack transform ----------------------------------------------------
@@ -107,8 +116,10 @@ function Scene({ onReady, quality }: { onReady: () => void; quality: QualitySett
         const lift = Math.pow(a, 2.2) * ASCENT_HEIGHT;
         const tilt = -MAX_TILT * Math.pow(a, 1.5);
         const shake = srbOn * (1 - a) * 0.012;
+        const roll = ROLL * smooth(0.03, 0.16, a) * (1 - smooth(0.85, 1, a));
         st.position.set(Math.pow(a, 3) * 14 + (Math.random() - 0.5) * shake, lift, 0);
-        st.rotation.set(0, 0, tilt);
+        st.rotation.order = "ZYX";
+        st.rotation.set(0, roll, tilt);
       } else {
         const turn = -MAX_TILT - (Math.PI / 2 - 0.2 - MAX_TILT) * smooth(0.15, 0.95, b);
         st.position.set(b * 3, Math.sin(t * 0.4) * 0.05, 0);
@@ -138,10 +149,12 @@ function Scene({ onReady, quality }: { onReady: () => void; quality: QualitySett
       emitters.current[1]!.position.copy(layout.srbR).setY(layout.srbR.y - 0.1).applyMatrix4(st.matrixWorld);
       emitters.current[2]!.position.set(0, layout.srbL.y + 0.25, 0.55).applyMatrix4(st.matrixWorld);
       emitters.current.forEach((e) => e.direction.copy(dir));
+      trailSource.current.copy(emitters.current[0]!.position).add(emitters.current[1]!.position).multiplyScalar(0.5);
+      trailActive.current = inSpace ? 0 : srbOn;
 
       if (engineLight.current) {
         engineLight.current.position.set(0, -1.2, 0).applyMatrix4(st.matrixWorld);
-        engineLight.current.intensity = (srbThrust.current * 32 + ssmeOn * 6) * (0.85 + Math.random() * 0.3);
+        engineLight.current.intensity = (srbThrust.current * 10 + ssmeOn * 3) * (0.85 + Math.random() * 0.3);
       }
     }
 
@@ -150,8 +163,9 @@ function Scene({ onReady, quality }: { onReady: () => void; quality: QualitySett
       const alt = smooth(0.05, 1, a);
       const zen = skyMat.uniforms["uZenith"]!.value as THREE.Color;
       const hor = skyMat.uniforms["uHorizon"]!.value as THREE.Color;
-      zen.copy(SKY.zenithLow).lerp(SKY.zenithHigh, alt);
-      hor.copy(SKY.horizonLow).lerp(SKY.horizonHigh, Math.pow(alt, 0.8));
+      // seen from the ground the sky only deepens a little; the full fade to black happens in the haze switch
+      zen.copy(SKY.zenithLow).lerp(SKY.zenithHigh, alt * 0.45);
+      hor.copy(SKY.horizonLow).lerp(SKY.horizonHigh, Math.pow(alt, 0.8) * 0.35);
       skyMat.uniforms["uStars"]!.value = smooth(0.55, 1, a);
       fog.color.copy(hor);
       fog.near = 40 + alt * 200;
@@ -177,17 +191,23 @@ function Scene({ onReady, quality }: { onReady: () => void; quality: QualitySett
     const px = state.pointer.x * 0.6;
     const py = state.pointer.y * 0.3;
     const sp = st ? st.position : tmpV.set(0, 0, 0);
+    const cam = camera as THREE.PerspectiveCamera;
+    let fov = BASE_FOV;
     if (!inSpace) {
+      // Long-lens tracking camera on the ground (like broadcast launch footage): it stays put after liftoff,
+      // tilts up to follow the stack and zooms in so the vehicle stays a similar size in frame.
       const intro = smooth(0, LIFTOFF_AT, p);
-      const pull = smooth(0, 1, a);
-      const dist = 19 - intro * 4 + pull * 14;
-      const camY = sp.y * 0.92 + 2.6 - pull * 3 + (1 - intro) * 1.4;
-      const ang = 0.62 - pull * 0.25;
-      camera.position.set(sp.x + Math.sin(ang) * dist + px, camY + py, Math.cos(ang) * dist);
-      const shake = srbThrust.current * (1 - a) * 0.05;
+      const dist = 19 - intro * 4;
+      const ang = 0.62;
+      const rise = smooth(0.08, 1, a) * 9;
+      camera.position.set(Math.sin(ang) * dist + px, 2.6 + (1 - intro) * 1.4 + rise + py, Math.cos(ang) * dist);
+      const shake = srbThrust.current * (1 - smooth(0, 0.3, a)) * 0.05;
       camera.position.x += (Math.random() - 0.5) * shake;
       camera.position.y += (Math.random() - 0.5) * shake;
-      lookTarget.set(sp.x, sp.y + 2.8 + pull * 1.5, 0);
+      lookTarget.set(sp.x, sp.y + 2.8 - smooth(0.02, 0.3, a) * 0.6, 0);
+      const d = camera.position.distanceTo(lookTarget);
+      const zoomOut = 1 + smooth(0.05, 0.6, a) * 0.7; // leave room for the exhaust column
+      fov = THREE.MathUtils.clamp(THREE.MathUtils.radToDeg(2 * Math.atan((FRAME_HALF * zoomOut) / d)), MIN_FOV, BASE_FOV);
     } else {
       const back = smooth(0.4, 1, b);
       const close = tmpV.set(sp.x + 5.5, sp.y - 0.5, 10);
@@ -203,6 +223,13 @@ function Scene({ onReady, quality }: { onReady: () => void; quality: QualitySett
       lookTarget.set(sp.x, sp.y + 2.4, sp.z);
     }
     camera.lookAt(lookTarget);
+    // portrait phones: widen the view so the stack and tower still fit across the narrow screen
+    const portrait = cam.aspect < 1 ? THREE.MathUtils.clamp(0.8 / cam.aspect, 1, 2.2) : 1;
+    if (portrait > 1) fov = Math.min(80, THREE.MathUtils.radToDeg(2 * Math.atan(Math.tan(THREE.MathUtils.degToRad(fov) / 2) * portrait)));
+    if (Math.abs(cam.fov - fov) > 0.01) {
+      cam.fov = fov;
+      cam.updateProjectionMatrix();
+    }
   });
 
   return (
@@ -223,7 +250,7 @@ function Scene({ onReady, quality }: { onReady: () => void; quality: QualitySett
         shadow-camera-bottom={-12}
         shadow-bias={-0.0004}
       />
-      <pointLight ref={engineLight} color="#ff9a3c" distance={40} decay={1.6} intensity={0} />
+      <pointLight ref={engineLight} color="#ffb366" distance={22} decay={1.8} intensity={0} />
       <Environment resolution={256}>
         <Lightformer intensity={2.2} position={[0, 6, 4]} scale={[12, 6, 1]} color="#fff4e6" />
         <Lightformer intensity={1.2} position={[-6, 2, -2]} rotation-y={Math.PI / 2} scale={[16, 3, 1]} color="#9fc0ff" />
@@ -233,6 +260,7 @@ function Scene({ onReady, quality }: { onReady: () => void; quality: QualitySett
       <group ref={ground}>
         <LaunchPad trees={quality.trees} />
         <Smoke emittersRef={emitters} rateRef={smokeRate} count={quality.smokeParticles} />
+        <Trail sourceRef={trailSource} activeRef={trailActive} count={quality.trailParticles} />
       </group>
 
       <group ref={space} visible={false}>
