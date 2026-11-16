@@ -101,7 +101,7 @@ export function LaunchHero() {
 
         {/* Scroll cue */}
         <div
-          className="pointer-events-none absolute bottom-8 left-1/2 hidden -translate-x-1/2 flex-col items-center gap-3 md:flex"
+          className="pointer-events-none absolute bottom-8 left-1/2 hidden -translate-x-1/2 flex-col items-center gap-3 md:flex [@media(max-height:760px)]:hidden!"
           style={{ opacity: introOpacity }}
         >
           <span className="eyebrow text-foreground/80">Scroll to launch</span>
