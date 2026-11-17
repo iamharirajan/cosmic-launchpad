@@ -18,4 +18,4 @@
 - [x] Check every page layout on phone, laptop and PC sizes (incl. header wrapping at ~850px)
 - [x] Make the climb more realistic and sharp (full-HD rendering, real-looking ascent motion, long exhaust trail)
 - [x] Push the pad, shuttle and surroundings toward "4K" realism (render at full screen resolution on 4K displays, finer trees/ocean, less cartoon look)
-- [ ] Push realism further toward a "4K video" look (latest ask)
+- [ ] Push realism further toward a "4K video" look, using https://youtu.be/Vfn_u768UoQ as reference (rocket, surroundings, pad)
