@@ -58,17 +58,17 @@ function buildTrees(count: number) {
   const palette = ["#263a19", "#2f4520", "#1f3014", "#3a5026", "#2b3d22", "#45552c"].map((c) => new THREE.Color(c));
   // Florida scrub grows in dense hammocks: most trees huddle around cluster centres so canopies merge
   const centres: [number, number][] = [];
-  for (let k = 0; k < Math.max(8, Math.round(count / 16)); k++) {
-    const r = 29 + Math.pow(rand(), 0.8) * 120;
+  for (let k = 0; k < Math.max(8, Math.round(count / 28)); k++) {
+    const r = 29 + Math.pow(rand(), 1.3) * 100;
     const a = rand() * Math.PI * 2;
     centres.push([Math.cos(a) * r, Math.sin(a) * r]);
   }
   let guard = 0;
   while (mats.length < count && guard++ < count * 20) {
     let x: number, z: number;
-    if (rand() < 0.78) {
+    if (rand() < 0.85) {
       const [cx, cz] = centres[Math.floor(rand() * centres.length)]!;
-      const rr = Math.sqrt(rand()) * (3 + rand() * 4);
+      const rr = Math.sqrt(rand()) * (2.5 + rand() * 3.5);
       const aa = rand() * Math.PI * 2;
       x = cx + Math.cos(aa) * rr;
       z = cz + Math.sin(aa) * rr;
@@ -81,7 +81,7 @@ function buildTrees(count: number) {
     if (Math.hypot(x, z) < 27) continue; // pad clearing
     if (z < COAST_Z + 6) continue; // keep the beach clear
     if (Math.abs(x * Math.cos(0.55) - z * Math.sin(0.55)) < 3 && z > 0) continue; // crawlerway
-    const sx = 0.45 + rand() * 0.7;
+    const sx = 0.6 + rand() * 0.8;
     const sy = 0.35 + rand() * 0.55;
     q.setFromEuler(new THREE.Euler(0, rand() * Math.PI * 2, 0));
     mats.push(m.compose(new THREE.Vector3(x, GROUND_Y - 0.05, z), q, new THREE.Vector3(sx, sy, sx * (0.7 + rand() * 0.6))).clone());
@@ -159,7 +159,7 @@ const grassTexture = () =>
   canvasTexture(
     512,
     (g, s) => {
-      g.fillStyle = "#3d5226";
+      g.fillStyle = "#34481f";
       g.fillRect(0, 0, s, s);
       // low scrub, palmetto clumps and sandy patches
       for (let i = 0; i < 160; i++) {
@@ -249,10 +249,10 @@ const panelTexture = (base: string, line: string) =>
       g.fillRect(0, 0, s, s);
       speckle(g, s, 3000, ["rgba(0,0,0,0.08)", "rgba(255,255,255,0.08)"], 2);
       // weathering: rust/grime streaks running down from the seams
-      for (let i = 0; i < 40; i++) {
-        const x = Math.random() * s, w = 2 + Math.random() * 10;
+      for (let i = 0; i < 18; i++) {
+        const x = Math.random() * s, w = 6 + Math.random() * 24;
         const grd = g.createLinearGradient(0, 0, 0, s);
-        grd.addColorStop(0, "rgba(40,36,32,0.12)");
+        grd.addColorStop(0, "rgba(40,36,32,0.05)");
         grd.addColorStop(1, "rgba(40,36,32,0)");
         g.fillStyle = grd;
         g.fillRect(x, 0, w, s * (0.3 + Math.random() * 0.7));
@@ -405,7 +405,7 @@ export function LaunchPad({ trees = 600 }: { trees?: number }) {
       concrete: concreteTexture(),
       gravel: gravelTexture(),
       sand: sandTexture(),
-      mlp: panelTexture("#8a8d90", "rgba(30,30,30,0.25)"),
+      mlp: panelTexture("#7b7e82", "rgba(30,30,30,0.25)"),
       rss: panelTexture("#b4b6b8", "rgba(50,52,55,0.25)"),
     }),
     [],
