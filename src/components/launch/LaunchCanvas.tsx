@@ -324,7 +324,6 @@ export default function LaunchCanvas() {
         <color attach="background" args={["#000000"]} />
         <Scene onReady={markReady} quality={quality} />
         <EffectComposer multisampling={quality.msaa} enableNormalPass={false}>
-          {/* contact shadows under the platform, tower and scrub (desktop tier only) */}
           
           {/* only HDR highlights (engine plumes, sun glint) cross the threshold */}
           <Bloom mipmapBlur luminanceThreshold={1.05} luminanceSmoothing={0.25} intensity={0.85} radius={0.7} />
