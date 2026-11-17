@@ -56,12 +56,29 @@ function buildTrees(count: number) {
   const m = new THREE.Matrix4();
   const q = new THREE.Quaternion();
   const palette = ["#263a19", "#2f4520", "#1f3014", "#3a5026", "#2b3d22", "#45552c"].map((c) => new THREE.Color(c));
+  // Florida scrub grows in dense hammocks: most trees huddle around cluster centres so canopies merge
+  const centres: [number, number][] = [];
+  for (let k = 0; k < Math.max(8, Math.round(count / 16)); k++) {
+    const r = 29 + Math.pow(rand(), 0.8) * 120;
+    const a = rand() * Math.PI * 2;
+    centres.push([Math.cos(a) * r, Math.sin(a) * r]);
+  }
   let guard = 0;
   while (mats.length < count && guard++ < count * 20) {
-    const r = 27 + Math.pow(rand(), 0.8) * 125;
-    const a = rand() * Math.PI * 2;
-    const x = Math.cos(a) * r;
-    const z = Math.sin(a) * r;
+    let x: number, z: number;
+    if (rand() < 0.78) {
+      const [cx, cz] = centres[Math.floor(rand() * centres.length)]!;
+      const rr = Math.sqrt(rand()) * (3 + rand() * 4);
+      const aa = rand() * Math.PI * 2;
+      x = cx + Math.cos(aa) * rr;
+      z = cz + Math.sin(aa) * rr;
+    } else {
+      const r = 27 + Math.pow(rand(), 0.8) * 125;
+      const a = rand() * Math.PI * 2;
+      x = Math.cos(a) * r;
+      z = Math.sin(a) * r;
+    }
+    if (Math.hypot(x, z) < 27) continue; // pad clearing
     if (z < COAST_Z + 6) continue; // keep the beach clear
     if (Math.abs(x * Math.cos(0.55) - z * Math.sin(0.55)) < 3 && z > 0) continue; // crawlerway
     const sx = 0.45 + rand() * 0.7;
@@ -113,6 +130,30 @@ const speckle = (g: CanvasRenderingContext2D, s: number, n: number, cols: string
     g.fillRect(Math.random() * s, Math.random() * s, 1 + Math.random() * max, 1 + Math.random() * max);
   }
 };
+
+/** Breaks texture tiling on big ground planes with low-frequency world-space tone/hue blotches. */
+function macroVariation(shader: { vertexShader: string; fragmentShader: string }) {
+  shader.vertexShader = shader.vertexShader
+    .replace("#include <common>", "#include <common>\nvarying vec2 vMacro;")
+    .replace("#include <begin_vertex>", "#include <begin_vertex>\nvMacro = (modelMatrix * vec4(transformed, 1.0)).xz;");
+  shader.fragmentShader = shader.fragmentShader
+    .replace(
+      "#include <common>",
+      `#include <common>
+      varying vec2 vMacro;
+      float mh(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+      float mn(vec2 p) { vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f);
+        return mix(mix(mh(i), mh(i + vec2(1, 0)), f.x), mix(mh(i + vec2(0, 1)), mh(i + vec2(1, 1)), f.x), f.y); }`,
+    )
+    .replace(
+      "#include <map_fragment>",
+      `#include <map_fragment>
+      float m1 = mn(vMacro * 0.035) * 0.6 + mn(vMacro * 0.11) * 0.4;
+      float m2 = mn(vMacro * 0.02 + 17.0);
+      diffuseColor.rgb *= 0.72 + 0.5 * m1;
+      diffuseColor.rgb = mix(diffuseColor.rgb, diffuseColor.rgb * vec3(1.25, 1.05, 0.7), smoothstep(0.55, 0.85, m2) * 0.6);`,
+    );
+}
 
 const grassTexture = () =>
   canvasTexture(
@@ -176,7 +217,7 @@ const concreteTexture = () =>
         g.ellipse(Math.random() * s, Math.random() * s, 20 + Math.random() * 50, 10 + Math.random() * 30, Math.random() * 3, 0, Math.PI * 2);
         g.fill();
       }
-      g.strokeStyle = "rgba(55,55,55,0.35)";
+      g.strokeStyle = "rgba(55,55,55,0.16)";
       for (let x = 0; x <= s; x += 64) {
         g.beginPath();
         g.moveTo(x, 0);
@@ -207,15 +248,24 @@ const panelTexture = (base: string, line: string) =>
       g.fillStyle = base;
       g.fillRect(0, 0, s, s);
       speckle(g, s, 3000, ["rgba(0,0,0,0.08)", "rgba(255,255,255,0.08)"], 2);
+      // weathering: rust/grime streaks running down from the seams
+      for (let i = 0; i < 40; i++) {
+        const x = Math.random() * s, w = 2 + Math.random() * 10;
+        const grd = g.createLinearGradient(0, 0, 0, s);
+        grd.addColorStop(0, "rgba(40,36,32,0.12)");
+        grd.addColorStop(1, "rgba(40,36,32,0)");
+        g.fillStyle = grd;
+        g.fillRect(x, 0, w, s * (0.3 + Math.random() * 0.7));
+      }
       g.strokeStyle = line;
-      g.lineWidth = 2;
-      for (let y = 0; y <= s; y += 32) {
+      g.lineWidth = 1;
+      for (let y = 0; y <= s; y += 64) {
         g.beginPath();
         g.moveTo(0, y);
         g.lineTo(s, y);
         g.stroke();
       }
-      for (let x = 0; x <= s; x += 64) {
+      for (let x = 0; x <= s; x += 128) {
         g.beginPath();
         g.moveTo(x, 0);
         g.lineTo(x, s);
@@ -318,12 +368,33 @@ function buildPlatform() {
   ];
   for (const x of [-1.4, 1.4])
     for (const z of [-1.1, 1.1]) body.push({ p: [x, (HARDSTAND_Y + DECK_Y - 0.7) / 2, z], s: [0.35, DECK_Y - 0.7 - HARDSTAND_Y, 0.35] });
+  // vertical stiffener ribs on all four faces
+  for (let x = -1.6; x <= 1.61; x += 0.32)
+    for (const z of [-1.41, 1.41]) body.push({ p: [x, DECK_Y - 0.35, z], s: [0.05, 0.68, 0.04] });
+  for (let z = -1.2; z <= 1.21; z += 0.4)
+    for (const x of [-1.71, 1.71]) body.push({ p: [x, DECK_Y - 0.35, z], s: [0.04, 0.68, 0.05] });
+  // mid-height ledge
+  body.push({ p: [0, DECK_Y - 0.4, 0], s: [3.5, 0.05, 2.9] });
+  // equipment huts and cable boxes along the deck edges
+  for (const [x, z, w, h, d] of [
+    [-1.35, -1.05, 0.5, 0.22, 0.4],
+    [1.3, -1.1, 0.6, 0.16, 0.35],
+    [1.35, 1.0, 0.45, 0.28, 0.45],
+    [-1.4, 1.05, 0.4, 0.18, 0.35],
+    [0, -1.2, 0.8, 0.12, 0.25],
+  ] as const)
+    body.push({ p: [x, DECK_Y + h / 2, z], s: [w, h, d] });
+  const rails: Beam[] = [];
+  for (const z of [-1.38, 1.38]) rails.push({ p: [0, DECK_Y + 0.14, z], s: [3.4, 0.012, 0.012] });
+  for (const x of [-1.68, 1.68]) rails.push({ p: [x, DECK_Y + 0.14, 0], s: [0.012, 0.012, 2.8] });
+  for (let x = -1.6; x <= 1.61; x += 0.32)
+    for (const z of [-1.38, 1.38]) rails.push({ p: [x, DECK_Y + 0.07, z], s: [0.01, 0.14, 0.01] });
   const holes: Beam[] = [
     { p: [-0.65, DECK_Y + 0.004, 0], s: [0.62, 0.01, 0.62] },
     { p: [0.65, DECK_Y + 0.004, 0], s: [0.62, 0.01, 0.62] },
     { p: [0, DECK_Y + 0.004, 0.62], s: [0.7, 0.01, 0.5] },
   ];
-  return { body: mergeBeams(body), holes: mergeBeams(holes) };
+  return { body: mergeBeams(body), holes: mergeBeams(holes), rails: mergeBeams(rails) };
 }
 
 /** Pad 39A-style launch complex with retracting access arms, crawlerway, water tower and coastline. */
@@ -334,8 +405,8 @@ export function LaunchPad({ trees = 600 }: { trees?: number }) {
       concrete: concreteTexture(),
       gravel: gravelTexture(),
       sand: sandTexture(),
-      mlp: panelTexture("#7d7f82", "rgba(30,30,30,0.4)"),
-      rss: panelTexture("#a8abae", "rgba(50,52,55,0.45)"),
+      mlp: panelTexture("#8a8d90", "rgba(30,30,30,0.25)"),
+      rss: panelTexture("#b4b6b8", "rgba(50,52,55,0.25)"),
     }),
     [],
   );
@@ -378,7 +449,7 @@ export function LaunchPad({ trees = 600 }: { trees?: number }) {
       {/* Marsh, beach and ocean */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, GROUND_Y, (COAST_Z + 1400) / 2]} receiveShadow>
         <planeGeometry args={[2800, 1400 - COAST_Z]} />
-        <meshStandardMaterial map={tex.grass} roughness={1} />
+        <meshStandardMaterial map={tex.grass} roughness={1} onBeforeCompile={macroVariation} />
       </mesh>
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, GROUND_Y + 0.01, COAST_Z - 4]}>
         <planeGeometry args={[2800, 8]} />
@@ -469,12 +540,15 @@ export function LaunchPad({ trees = 600 }: { trees?: number }) {
       </mesh>
       <mesh position={[0, HARDSTAND_Y + 0.005, 0]}>
         <boxGeometry args={[12.5, 0.01, 1.5]} />
-        <meshStandardMaterial color="#1a1918" roughness={1} />
+        <meshStandardMaterial color="#3a3733" roughness={1} map={tex.concrete} />
       </mesh>
 
       {/* Mobile launcher platform */}
       <mesh geometry={platform.body} castShadow receiveShadow>
         <meshStandardMaterial map={tex.mlp} roughness={0.8} metalness={0.2} />
+      </mesh>
+      <mesh geometry={platform.rails}>
+        {steel}
       </mesh>
       <mesh geometry={platform.holes}>
         <meshStandardMaterial color="#0d0c0c" roughness={1} />
@@ -554,6 +628,10 @@ export function LaunchPad({ trees = 600 }: { trees?: number }) {
             {grey}
           </mesh>
         ))}
+        <mesh position={[0, 3.5, 0]} castShadow>
+          <cylinderGeometry args={[0.16, 0.2, 7, 12]} />
+          <meshStandardMaterial color="#e6e4df" roughness={0.6} />
+        </mesh>
         <mesh position={[0, 7.6, 0]} castShadow>
           <sphereGeometry args={[1.05, 24, 16]} />
           <meshStandardMaterial color="#e6e4df" roughness={0.5} />
@@ -563,8 +641,8 @@ export function LaunchPad({ trees = 600 }: { trees?: number }) {
       {/* Propellant storage spheres */}
       {(
         [
-          [-12, -9, 1.3],
-          [11, 8, 1.1],
+          [-19, -15, 1.3],
+          [15, 10, 1.1],
         ] as const
       ).map(([x, z, r]) => (
         <group key={x} position={[x, GROUND_Y, z]}>
@@ -622,7 +700,7 @@ export function createSkyMaterial() {
     uniforms: {
       uZenith: { value: new THREE.Color() },
       uHorizon: { value: new THREE.Color() },
-      uSun: { value: new THREE.Vector3(-0.8, 0.55, -0.55).normalize() },
+      uSun: { value: new THREE.Vector3(-0.55, 0.32, 0.78).normalize() },
       uStars: { value: 0 },
     },
   });

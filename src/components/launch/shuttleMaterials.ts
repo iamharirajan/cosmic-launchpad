@@ -75,7 +75,8 @@ const TANK = /* glsl */ `
   float big = vnoise(p * vec3(0.9, 0.9, 0.18));
   float fine = vnoise(p * 7.0);
   float streak = vnoise(vec3(atan(p.y + 3.3, p.x) * 6.0, p.z * 0.08, 1.0));
-  vec3 col = mix(vec3(0.78, 0.22, 0.018), vec3(0.95, 0.34, 0.035), big);
+  // late-program ET: burnt, brownish orange foam with darker vertical weathering
+  vec3 col = mix(vec3(0.42, 0.13, 0.022), vec3(0.56, 0.19, 0.04), big);
   col *= 0.86 + 0.14 * fine;
   col *= 0.92 + 0.08 * streak;
   // Intertank: ribbed, slightly darker band.
