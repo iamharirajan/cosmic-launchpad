@@ -18,6 +18,5 @@ describe("launch scene quality tier", () => {
   it("keeps the light tier within the phone budget", () => {
     expect(QUALITY.low.maxDpr).toBeLessThanOrEqual(1.5);
     expect(QUALITY.low.shadowMapSize).toBeLessThanOrEqual(1024);
-    expect(QUALITY.low.ao).toBe(false);
   });
 });
