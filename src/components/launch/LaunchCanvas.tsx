@@ -325,7 +325,7 @@ export default function LaunchCanvas() {
         <Scene onReady={markReady} quality={quality} />
         <EffectComposer multisampling={quality.msaa} enableNormalPass={false}>
           {/* contact shadows under the platform, tower and scrub (desktop tier only) */}
-          {quality.ao ? <N8AO halfRes aoRadius={0.8} distanceFalloff={0.6} intensity={2.2} quality="medium" color="#1a1d22" /> : <></>}
+          <N8AO enabled={quality.ao} halfRes aoRadius={0.8} distanceFalloff={0.6} intensity={2.2} quality="medium" color="#1a1d22" />
           {/* only HDR highlights (engine plumes, sun glint) cross the threshold */}
           <Bloom mipmapBlur luminanceThreshold={1.05} luminanceSmoothing={0.25} intensity={0.85} radius={0.7} />
           <HueSaturation saturation={0.08} />
