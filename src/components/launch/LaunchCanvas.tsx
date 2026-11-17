@@ -1,7 +1,7 @@
 import { Environment, Lightformer, PerformanceMonitor, Stars } from "@react-three/drei";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { Bloom, BrightnessContrast, EffectComposer, HueSaturation, ToneMapping, Vignette } from "@react-three/postprocessing";
-import { ToneMappingMode } from "postprocessing";
+import { Bloom, BrightnessContrast, EffectComposer, HueSaturation, Noise, ToneMapping, Vignette } from "@react-three/postprocessing";
+import { BlendFunction, ToneMappingMode } from "postprocessing";
 import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 
@@ -34,9 +34,9 @@ const SCROLL_DAMP = 4.5;
 const PAD_SUN = new THREE.Vector3(-0.55, 0.32, 0.78).normalize();
 
 const SKY = {
-  zenithLow: new THREE.Color("#2f62a6"),
+  zenithLow: new THREE.Color("#1d56b4"),
   zenithHigh: new THREE.Color("#02040c"),
-  horizonLow: new THREE.Color("#9fb9d2"),
+  horizonLow: new THREE.Color("#8db2dc"),
   horizonHigh: new THREE.Color("#1d3d78"),
 };
 
@@ -330,6 +330,8 @@ export default function LaunchCanvas() {
           <BrightnessContrast contrast={0.06} />
           <ToneMapping mode={ToneMappingMode.ACES_FILMIC} />
           <Vignette offset={0.32} darkness={0.5} />
+          {/* faint film grain so flat sky and smoke read like camera footage, not CG gradients */}
+          <Noise premultiply blendFunction={BlendFunction.SCREEN} opacity={0.22} />
         </EffectComposer>
       </Canvas>
     </div>

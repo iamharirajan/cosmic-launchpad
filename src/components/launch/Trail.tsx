@@ -7,7 +7,7 @@ import { smokeFragment, smokeVertex } from "./Smoke";
 // Feel constants
 const STEP = 0.22; // world units of climb between trail puffs
 const LIFE = 34; // seconds a puff lingers in the air
-const GROWTH = 0.9; // size growth per second (the column widens as it drifts)
+const GROWTH = 1.2; // size growth per second (the column widens as it drifts)
 
 type TrailProps = {
   /** World position between the booster nozzles. */
@@ -86,14 +86,14 @@ export function Trail({ sourceRef, activeRef, count }: TrailProps) {
         sim.cursor = (sim.cursor + 1) % count;
         const j = i * 3;
         tmp.copy(sim.last);
-        sim.pos[j] = tmp.x + (Math.random() - 0.5) * 0.12;
+        sim.pos[j] = tmp.x + (Math.random() - 0.5) * 0.4;
         sim.pos[j + 1] = tmp.y;
-        sim.pos[j + 2] = tmp.z + (Math.random() - 0.5) * 0.12;
+        sim.pos[j + 2] = tmp.z + (Math.random() - 0.5) * 0.4;
         sim.vel[j] = (Math.random() - 0.5) * 0.5;
         sim.vel[j + 1] = -0.6 - Math.random() * 0.6;
         sim.vel[j + 2] = (Math.random() - 0.5) * 0.5;
         sim.age[i] = 0;
-        sim.base[i] = 0.9 + Math.random() * 0.7;
+        sim.base[i] = 1.5 + Math.random() * 1.1;
       }
     }
 
