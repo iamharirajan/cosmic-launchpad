@@ -41,3 +41,4 @@ use the editor.
 - Draco decoder files are self-hosted in `public/draco/` because the shuttle GLB is Draco-compressed and drei would otherwise fetch a decoder from a third-party CDN.
 - Media (videos, photos, GLB, Earth textures, résumé) is hosted via `lovable-assets` pointers under `src/assets/`; never commit the binaries.
 - Dev-only hook: `window.__launch` (`{ progress, snap, inspect }`) — `snap = true` skips scroll smoothing; `inspect = [x,y,z]` parks the camera at that offset from the stack for model close-ups.
+- Do not add `N8AO` ambient occlusion: the installed n8ao 2.x throws every frame with this three.js version and blanks the launch scene.
