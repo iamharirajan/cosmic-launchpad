@@ -1,7 +1,7 @@
 import { Environment, Lightformer, PerformanceMonitor, Stars } from "@react-three/drei";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { Bloom, BrightnessContrast, EffectComposer, HueSaturation, ToneMapping, Vignette } from "@react-three/postprocessing";
-import { ToneMappingMode } from "postprocessing";
+import { Bloom, BrightnessContrast, EffectComposer, HueSaturation, N8AO, Noise, ToneMapping, Vignette } from "@react-three/postprocessing";
+import { BlendFunction, ToneMappingMode } from "postprocessing";
 import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 
@@ -34,9 +34,9 @@ const SCROLL_DAMP = 4.5;
 const PAD_SUN = new THREE.Vector3(-0.55, 0.32, 0.78).normalize();
 
 const SKY = {
-  zenithLow: new THREE.Color("#2f62a6"),
+  zenithLow: new THREE.Color("#1d56b4"),
   zenithHigh: new THREE.Color("#02040c"),
-  horizonLow: new THREE.Color("#9fb9d2"),
+  horizonLow: new THREE.Color("#8db2dc"),
   horizonHigh: new THREE.Color("#1d3d78"),
 };
 
@@ -324,12 +324,16 @@ export default function LaunchCanvas() {
         <color attach="background" args={["#000000"]} />
         <Scene onReady={markReady} quality={quality} />
         <EffectComposer multisampling={quality.msaa} enableNormalPass={false}>
+          {/* contact shadows under the platform, tower and scrub (desktop tier only) */}
+          {quality.ao ? <N8AO halfRes aoRadius={0.8} distanceFalloff={0.6} intensity={2.2} quality="medium" color="#1a1d22" /> : <></>}
           {/* only HDR highlights (engine plumes, sun glint) cross the threshold */}
           <Bloom mipmapBlur luminanceThreshold={1.05} luminanceSmoothing={0.25} intensity={0.85} radius={0.7} />
           <HueSaturation saturation={0.08} />
           <BrightnessContrast contrast={0.06} />
           <ToneMapping mode={ToneMappingMode.ACES_FILMIC} />
           <Vignette offset={0.32} darkness={0.5} />
+          {/* faint film grain so flat sky and smoke read like camera footage, not CG gradients */}
+          <Noise premultiply blendFunction={BlendFunction.SCREEN} opacity={0.22} />
         </EffectComposer>
       </Canvas>
     </div>
