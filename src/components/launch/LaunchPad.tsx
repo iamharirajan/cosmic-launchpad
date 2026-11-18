@@ -103,6 +103,44 @@ function buildTrees(count: number) {
   };
 }
 
+/** Leafy breakup for the instanced canopies: world-space noise darkens gaps between leaf clumps and jitters the normal,
+ *  so the scrub reads as foliage instead of smooth green blobs. */
+function foliage(shader: THREE.WebGLProgramParametersWithUniforms) {
+  shader.vertexShader = shader.vertexShader
+    .replace("#include <common>", "#include <common>\nvarying vec3 vLeaf;")
+    .replace(
+      "#include <worldpos_vertex>",
+      "#include <worldpos_vertex>\nvLeaf = (modelMatrix * instanceMatrix * vec4(transformed, 1.0)).xyz;",
+    );
+  shader.fragmentShader = shader.fragmentShader
+    .replace(
+      "#include <common>",
+      `#include <common>
+      varying vec3 vLeaf;
+      float lh(vec3 p) { return fract(sin(dot(p, vec3(127.1, 311.7, 74.7))) * 43758.5453); }
+      float ln(vec3 p) {
+        vec3 i = floor(p); vec3 f = fract(p); f = f * f * (3.0 - 2.0 * f);
+        return mix(mix(mix(lh(i), lh(i + vec3(1,0,0)), f.x), mix(lh(i + vec3(0,1,0)), lh(i + vec3(1,1,0)), f.x), f.y),
+                   mix(mix(lh(i + vec3(0,0,1)), lh(i + vec3(1,0,1)), f.x), mix(lh(i + vec3(0,1,1)), lh(i + vec3(1,1,1)), f.x), f.y), f.z);
+      }`,
+    )
+    .replace(
+      "#include <map_fragment>",
+      `#include <map_fragment>
+      float leafA = ln(vLeaf * 5.0);
+      float leafB = ln(vLeaf * 13.0 + 7.0);
+      float leaf = leafA * 0.6 + leafB * 0.4;
+      diffuseColor.rgb *= 0.45 + 0.95 * smoothstep(0.2, 0.85, leaf);
+      diffuseColor.rgb = mix(diffuseColor.rgb, diffuseColor.rgb * vec3(1.25, 1.15, 0.7), smoothstep(0.7, 0.95, leafB) * 0.6);`,
+    )
+    .replace(
+      "#include <normal_fragment_maps>",
+      `#include <normal_fragment_maps>
+      vec3 lj = vec3(ln(vLeaf * 9.0), ln(vLeaf * 9.0 + 3.1), ln(vLeaf * 9.0 + 6.7)) - 0.5;
+      normal = normalize(normal + lj * 1.1);`,
+    );
+}
+
 const LIGHT_MASTS: [number, number][] = [
   [-10, 6],
   [9.5, 6.5],
@@ -474,7 +512,7 @@ export function LaunchPad({ trees = 600 }: { trees?: number }) {
 
       {/* Scrub trees and palmetto clumps */}
       <instancedMesh args={[forest.geometry, undefined, forest.count]} ref={forest.attach} castShadow receiveShadow>
-        <meshStandardMaterial vertexColors={false} roughness={0.95} />
+        <meshStandardMaterial vertexColors={false} roughness={0.95} onBeforeCompile={foliage} />
       </instancedMesh>
 
       {/* Perimeter road and pad access road */}
@@ -672,6 +710,10 @@ const skyFragment = /* glsl */ `
   uniform vec3 uHorizon;
   uniform vec3 uSun;
   uniform float uStars;
+  uniform sampler2D uPhoto;
+  uniform float uPhotoMix;
+  uniform float uPhotoOffset;
+  uniform float uPhotoDim;
   varying vec3 vDir;
   float hash(vec3 p) { return fract(sin(dot(p, vec3(12.9898, 78.233, 37.719))) * 43758.5453); }
   void main() {
@@ -680,6 +722,15 @@ const skyFragment = /* glsl */ `
     vec3 col = mix(uHorizon, uZenith, pow(smoothstep(-0.05, 0.9, h), 0.6));
     float sun = max(dot(d, uSun), 0.0);
     col += vec3(1.0, 0.88, 0.7) * (pow(sun, 64.0) * 0.06 + pow(sun, 6000.0) * 1.6);
+    if (uPhotoMix > 0.0) {
+      // real photographed cumulus sky (upper hemisphere equirect), a touch more saturated like broadcast footage
+      vec2 puv = vec2(fract(atan(d.z, d.x) / 6.2831853 + 0.5 + uPhotoOffset), clamp(asin(clamp(d.y, 0.0, 1.0)) / 1.5707963, 0.002, 0.998));
+      vec3 photo = texture2D(uPhoto, puv).rgb;
+      float lum = dot(photo, vec3(0.2126, 0.7152, 0.0722));
+      photo = max(mix(vec3(lum), photo, 1.35), 0.0) * vec3(0.92, 0.97, 1.08) * 1.25;
+      photo *= mix(1.0, 0.72, smoothstep(0.1, 0.9, h));
+      col = mix(col, photo * uPhotoDim, uPhotoMix);
+    }
     vec3 g = d * 900.0;
     vec3 cell = floor(g);
     float star = step(0.9985, hash(cell)) * smoothstep(0.45, 0.1, length(fract(g) - 0.5));
@@ -702,7 +753,26 @@ export function createSkyMaterial() {
       uHorizon: { value: new THREE.Color() },
       uSun: { value: new THREE.Vector3(-0.55, 0.32, 0.78).normalize() },
       uStars: { value: 0 },
+      uPhoto: { value: null as THREE.Texture | null },
+      uPhotoMix: { value: 0 },
+      // rotates the photo so its sun sits at the same azimuth as the scene's sun light
+      uPhotoOffset: { value: -0.2516 },
+      uPhotoDim: { value: 1 },
     },
+  });
+}
+
+/** Loads the photographed sky into a sky material without suspending the scene (gradient shows until it arrives). */
+export function loadSkyPhoto(mat: THREE.ShaderMaterial, url: string) {
+  new THREE.TextureLoader().load(url, (tex) => {
+    tex.colorSpace = THREE.SRGBColorSpace;
+    tex.wrapS = THREE.RepeatWrapping;
+    // no mipmaps: the equirect seam would otherwise pick a tiny mip and draw a line
+    tex.generateMipmaps = false;
+    tex.minFilter = THREE.LinearFilter;
+    tex.anisotropy = 4;
+    mat.uniforms["uPhoto"]!.value = tex;
+    mat.uniforms["uPhotoMix"]!.value = 1;
   });
 }
 

@@ -6,7 +6,8 @@ import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 
 import { Earth, SUN_DIR } from "./Earth";
-import { LaunchPad, createSkyMaterial } from "./LaunchPad";
+import { LaunchPad, createSkyMaterial, loadSkyPhoto } from "./LaunchPad";
+import skyPhoto from "@/assets/textures/cumulus_sky_4k.jpg.asset.json";
 import { ShuttleStack, createStackLayout } from "./Shuttle";
 import { QUALITY, pickTier, readDeviceHints, type QualitySettings } from "./quality";
 import { Smoke, type Emitter } from "./Smoke";
@@ -36,7 +37,7 @@ const PAD_SUN = new THREE.Vector3(-0.55, 0.32, 0.78).normalize();
 const SKY = {
   zenithLow: new THREE.Color("#1d56b4"),
   zenithHigh: new THREE.Color("#02040c"),
-  horizonLow: new THREE.Color("#8db2dc"),
+  horizonLow: new THREE.Color("#a3b0c6"),
   horizonHigh: new THREE.Color("#1d3d78"),
 };
 
@@ -73,6 +74,7 @@ function Scene({ onReady, quality }: { onReady: () => void; quality: QualitySett
   ]);
 
   const skyMat = useMemo(createSkyMaterial, []);
+  useEffect(() => loadSkyPhoto(skyMat, skyPhoto.url), [skyMat]);
   const fog = useMemo(() => new THREE.Fog("#9fb9d2", 40, 600), []);
 
   useEffect(() => {
@@ -167,6 +169,7 @@ function Scene({ onReady, quality }: { onReady: () => void; quality: QualitySett
       zen.copy(SKY.zenithLow).lerp(SKY.zenithHigh, alt * 0.45);
       hor.copy(SKY.horizonLow).lerp(SKY.horizonHigh, Math.pow(alt, 0.8) * 0.35);
       skyMat.uniforms["uStars"]!.value = smooth(0.55, 1, a);
+      skyMat.uniforms["uPhotoDim"]!.value = 1 - alt * 0.3;
       fog.color.copy(hor);
       fog.near = 40 + alt * 200;
       fog.far = 600 + alt * 1400;
