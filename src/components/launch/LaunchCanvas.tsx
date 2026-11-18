@@ -6,7 +6,7 @@ import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three";
 
 import { Earth, SUN_DIR } from "./Earth";
-import { LaunchPad, createSkyMaterial, loadSkyPhoto } from "./LaunchPad";
+import { LaunchPad, buildSkyEnvCanvas, createSkyMaterial, loadSkyPhoto } from "./LaunchPad";
 import skyPhoto from "@/assets/textures/cumulus_sky_4k.jpg.asset.json";
 import { ShuttleStack, createStackLayout } from "./Shuttle";
 import { QUALITY, pickTier, readDeviceHints, type QualitySettings } from "./quality";
@@ -46,7 +46,10 @@ const tmpV2 = new THREE.Vector3();
 const lookTarget = new THREE.Vector3();
 
 function Scene({ onReady, quality }: { onReady: () => void; quality: QualitySettings }) {
-  const { camera, scene } = useThree();
+  const { camera, scene, gl } = useThree();
+  // reflections of the photographed sky while on the ground; the studio Lightformer env stays for space
+  const skyEnv = useRef<THREE.Texture | null>(null);
+  const studioEnv = useRef<THREE.Texture | null>(null);
   const smoothP = useRef(launchState.progress);
 
   const stack = useRef<THREE.Group>(null);
@@ -74,7 +77,24 @@ function Scene({ onReady, quality }: { onReady: () => void; quality: QualitySett
   ]);
 
   const skyMat = useMemo(createSkyMaterial, []);
-  useEffect(() => loadSkyPhoto(skyMat, skyPhoto.url), [skyMat]);
+  useEffect(() => {
+    let rt: THREE.WebGLRenderTarget | null = null;
+    loadSkyPhoto(skyMat, skyPhoto.url, (tex) => {
+      const img = tex.image as HTMLImageElement;
+      const canvasTex = new THREE.CanvasTexture(buildSkyEnvCanvas(img, skyMat.uniforms["uPhotoOffset"]!.value as number));
+      canvasTex.mapping = THREE.EquirectangularReflectionMapping;
+      canvasTex.colorSpace = THREE.SRGBColorSpace;
+      const pmrem = new THREE.PMREMGenerator(gl);
+      rt = pmrem.fromEquirectangular(canvasTex);
+      pmrem.dispose();
+      canvasTex.dispose();
+      skyEnv.current = rt.texture;
+    });
+    return () => {
+      rt?.dispose();
+      skyEnv.current = null;
+    };
+  }, [skyMat, gl]);
   const fog = useMemo(() => new THREE.Fog("#9fb9d2", 40, 600), []);
 
   useEffect(() => {
@@ -98,6 +118,11 @@ function Scene({ onReady, quality }: { onReady: () => void; quality: QualitySett
     if (space.current) space.current.visible = inSpace;
     if (sky.current) sky.current.visible = !inSpace;
     scene.fog = inSpace ? null : fog;
+    if (skyEnv.current) {
+      if (scene.environment && scene.environment !== skyEnv.current) studioEnv.current = scene.environment;
+      const want = inSpace ? studioEnv.current : skyEnv.current;
+      if (want && scene.environment !== want) scene.environment = want;
+    }
 
     // --- Engine state -------------------------------------------------------
     const srbSep = smooth(0.06, 0.4, b);

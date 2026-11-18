@@ -762,8 +762,28 @@ export function createSkyMaterial() {
   });
 }
 
+/** Full-sphere equirect canvas for reflections: the sky photo on top (rotated by the same offset as the sky dome) and
+ *  warm scrub-and-sand tones below, so the shuttle and steel reflect the real sky over Florida ground. */
+export function buildSkyEnvCanvas(img: CanvasImageSource & { width: number; height: number }, offset: number) {
+  const W = 1024;
+  const c = document.createElement("canvas");
+  c.width = W;
+  c.height = W / 2;
+  const g = c.getContext("2d")!;
+  const shift = -offset * W;
+  g.drawImage(img, shift, 0, W, W / 4);
+  g.drawImage(img, shift - W, 0, W, W / 4);
+  const ground = g.createLinearGradient(0, W / 4, 0, W / 2);
+  ground.addColorStop(0, "#a7aab3");
+  ground.addColorStop(0.08, "#6d6a55");
+  ground.addColorStop(1, "#3a3a2a");
+  g.fillStyle = ground;
+  g.fillRect(0, W / 4, W, W / 4);
+  return c;
+}
+
 /** Loads the photographed sky into a sky material without suspending the scene (gradient shows until it arrives). */
-export function loadSkyPhoto(mat: THREE.ShaderMaterial, url: string) {
+export function loadSkyPhoto(mat: THREE.ShaderMaterial, url: string, onLoad?: (tex: THREE.Texture) => void) {
   new THREE.TextureLoader().load(url, (tex) => {
     tex.colorSpace = THREE.SRGBColorSpace;
     tex.wrapS = THREE.RepeatWrapping;
@@ -773,6 +793,7 @@ export function loadSkyPhoto(mat: THREE.ShaderMaterial, url: string) {
     tex.anisotropy = 4;
     mat.uniforms["uPhoto"]!.value = tex;
     mat.uniforms["uPhotoMix"]!.value = 1;
+    onLoad?.(tex);
   });
 }
 
