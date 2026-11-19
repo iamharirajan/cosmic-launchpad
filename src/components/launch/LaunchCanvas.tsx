@@ -9,7 +9,7 @@ import { Earth, SUN_DIR } from "./Earth";
 import { LaunchPad, buildSkyEnvCanvas, createSkyMaterial, loadSkyPhoto } from "./LaunchPad";
 import skyPhoto from "@/assets/textures/cumulus_sky_4k.jpg.asset.json";
 import { ShuttleStack, createStackLayout } from "./Shuttle";
-import { QUALITY, pickTier, readDeviceHints, type QualitySettings } from "./quality";
+import { QUALITY, QUALITY_MODE, readDeviceHints, selectTier, type QualitySettings } from "./quality";
 import { Smoke, type Emitter } from "./Smoke";
 import { Trail } from "./Trail";
 import {
@@ -327,8 +327,8 @@ function ReadyMarker({ onReady }: { onReady: () => void }) {
 export default function LaunchCanvas() {
   const wrapper = useRef<HTMLDivElement>(null);
   const markReady = () => wrapper.current?.setAttribute("data-scene-ready", "true");
-  // Phones get the light tier, laptops/desktops the full one; the monitor then adapts resolution to measured FPS.
-  const quality = useMemo(() => QUALITY[pickTier(readDeviceHints())], []);
+  // Full detail on every device; the monitor only steps resolution down if a device can't keep up.
+  const quality = useMemo(() => QUALITY[selectTier(QUALITY_MODE, readDeviceHints())], []);
   const deviceDpr = typeof window === "undefined" ? 1 : window.devicePixelRatio || 1;
   const [dpr, setDpr] = useState(() => Math.min(deviceDpr, quality.maxDpr));
   useEffect(() => {

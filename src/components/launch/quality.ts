@@ -43,6 +43,14 @@ export function pickTier(h: DeviceHints): Tier {
   return "high";
 }
 
+/** "high" = full detail on every device (the owner's choice); "auto" = phones and weak machines get the light tier. */
+export type QualityMode = "auto" | "high";
+export const QUALITY_MODE: QualityMode = "high";
+
+export function selectTier(mode: QualityMode, h: DeviceHints): Tier {
+  return mode === "high" ? "high" : pickTier(h);
+}
+
 export function readDeviceHints(): DeviceHints {
   const nav = navigator as Navigator & { deviceMemory?: number };
   return {
