@@ -554,7 +554,7 @@ export function LaunchPad({ trees = 600 }: { trees?: number }) {
       {PAD_BUILDINGS.map(([x, z, w, h, d], i) => (
         <mesh key={`b${i}`} position={[x, GROUND_Y + h / 2, z]} castShadow receiveShadow>
           <boxGeometry args={[w, h, d]} />
-          <meshStandardMaterial color={BUILDING_TONES[i % BUILDING_TONES.length]} roughness={0.85} />
+          <meshStandardMaterial color={BUILDING_TONES[i % BUILDING_TONES.length]!} roughness={0.85} />
         </mesh>
       ))}
       {LIGHT_MASTS.map(([x, z], i) => (
