@@ -20,4 +20,5 @@
 - [x] Push the pad, shuttle and surroundings toward "4K" realism (render at full screen resolution on 4K displays, finer trees/ocean, less cartoon look)
 - [x] Push realism further toward a "4K video" look, using https://youtu.be/Vfn_u768UoQ as reference (rocket, surroundings, pad)
 - [x] Launch uses full (high) detail on every device, phones included
+- [x] Match the OnoNITE-CLc broadcast view: distant long-lens camera, deep blue ocean horizon behind the pad, natural-toned buildings, foreground scrub
 - [x] Hyper-realistic background: real photographed cloudy sky behind pad and climb, leafier trees

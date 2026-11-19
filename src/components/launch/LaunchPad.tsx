@@ -16,15 +16,19 @@ const COAST_Z = -70;
 
 // [x, z, width, height, depth] — service buildings around the pad perimeter
 const PAD_BUILDINGS: [number, number, number, number, number][] = [
-  [-9, 9, 2.4, 0.9, 1.6],
+  [-11, -6, 2.4, 0.9, 1.6],
   [-6.5, 12, 1.4, 0.6, 1],
-  [8, 12, 3, 0.8, 1.4],
+  [8, -16, 3, 0.8, 1.4],
   [12, 3, 1.2, 1.1, 1.2],
   [-14, -2, 2, 0.7, 1.4],
   [6, -13, 2.6, 1, 1.8],
   [-7, -14, 1.6, 0.6, 1.2],
-  [16, 14, 1.8, 0.7, 1.1],
+  [18, -6, 1.8, 0.7, 1.1],
 ];
+// weathered concrete / sun-bleached siding, never paper white
+const BUILDING_TONES = ["#b3ad9f", "#8c8f8d", "#a19d92", "#c2bcae"];
+/** Azimuth (atan2(z, x)) of the ground tracking camera seen from the pad; scrub is densest in its view. */
+const CAMERA_AZIMUTH = Math.atan2(Math.cos(0.62), Math.sin(0.62));
 // [x, z, radiusX, radiusZ] — standing water in the marsh around the pad
 const MARSH_PONDS: [number, number, number, number][] = [
   [-34, 18, 7, 3],
@@ -60,7 +64,8 @@ function buildTrees(count: number) {
   const centres: [number, number][] = [];
   for (let k = 0; k < Math.max(8, Math.round(count / 28)); k++) {
     const r = 29 + Math.pow(rand(), 1.3) * 100;
-    const a = rand() * Math.PI * 2;
+    // half the hammocks sit between the camera and the pad, where they fill the foreground like real footage
+    const a = k % 2 === 0 ? CAMERA_AZIMUTH + (rand() - 0.5) * 1.1 : rand() * Math.PI * 2;
     centres.push([Math.cos(a) * r, Math.sin(a) * r]);
   }
   let guard = 0;
@@ -549,7 +554,7 @@ export function LaunchPad({ trees = 600 }: { trees?: number }) {
       {PAD_BUILDINGS.map(([x, z, w, h, d], i) => (
         <mesh key={`b${i}`} position={[x, GROUND_Y + h / 2, z]} castShadow receiveShadow>
           <boxGeometry args={[w, h, d]} />
-          {i % 3 === 0 ? grey : white}
+          <meshStandardMaterial color={BUILDING_TONES[i % BUILDING_TONES.length]} roughness={0.85} />
         </mesh>
       ))}
       {LIGHT_MASTS.map(([x, z], i) => (
@@ -680,13 +685,13 @@ export function LaunchPad({ trees = 600 }: { trees?: number }) {
       {(
         [
           [-19, -15, 1.3],
-          [15, 10, 1.1],
+          [17, -17, 1.1],
         ] as const
       ).map(([x, z, r]) => (
         <group key={x} position={[x, GROUND_Y, z]}>
           <mesh position={[0, r + 0.4, 0]} castShadow>
             <sphereGeometry args={[r, 24, 16]} />
-            <meshStandardMaterial color="#ecebe7" roughness={0.45} />
+            <meshStandardMaterial color="#dcd9d0" roughness={0.6} />
           </mesh>
           <mesh position={[0, 0.25, 0]}>
             <cylinderGeometry args={[r * 0.8, r * 0.9, 0.5, 16]} />
@@ -727,7 +732,7 @@ const skyFragment = /* glsl */ `
       vec2 puv = vec2(fract(atan(d.z, d.x) / 6.2831853 + 0.5 + uPhotoOffset), clamp(asin(clamp(d.y, 0.0, 1.0)) / 1.5707963, 0.002, 0.998));
       vec3 photo = texture2D(uPhoto, puv).rgb;
       float lum = dot(photo, vec3(0.2126, 0.7152, 0.0722));
-      photo = max(mix(vec3(lum), photo, 1.35), 0.0) * vec3(0.92, 0.97, 1.08) * 1.25;
+      photo = max(mix(vec3(lum), photo, 1.35), 0.0) * vec3(0.88, 0.98, 1.06) * 1.25;
       photo *= mix(1.0, 0.72, smoothstep(0.1, 0.9, h));
       col = mix(col, photo * uPhotoDim, uPhotoMix);
     }
@@ -841,7 +846,8 @@ const oceanFragment = /* glsl */ `
     float fres = 0.04 + 0.96 * pow(1.0 - clamp(dot(n, v), 0.0, 1.0), 5.0);
     float shore = smoothstep(0.0, 40.0, -(vWorld.z + 78.0));
     vec3 water = mix(uShallow, uDeep, shore);
-    vec3 col = mix(water, uSkyRefl, fres * 0.85);
+    // seen from far across the marsh the Atlantic stays a deep saturated blue right up to the horizon
+    vec3 col = mix(water, uSkyRefl, fres * 0.6);
     vec3 h = normalize(uSunDir + v);
     float spec = pow(clamp(dot(n, h), 0.0, 1.0), 320.0);
     col += vec3(1.0, 0.95, 0.85) * min(spec * 4.0, 6.0);
@@ -862,9 +868,9 @@ export function createOceanMaterial() {
       THREE.UniformsLib.fog,
       {
         uTime: { value: 0 },
-        uDeep: { value: new THREE.Color("#0f3a63") },
+        uDeep: { value: new THREE.Color("#0a3566") },
         uShallow: { value: new THREE.Color("#2b6f86") },
-        uSkyRefl: { value: new THREE.Color("#8fb0d0") },
+        uSkyRefl: { value: new THREE.Color("#4d7aab") },
         uSunDir: { value: new THREE.Vector3(-0.55, 0.32, 0.78).normalize() },
       },
     ]),

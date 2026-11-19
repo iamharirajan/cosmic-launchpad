@@ -30,6 +30,13 @@ const BASE_FOV = 38;
 const MIN_FOV = 6;
 /** Half-height (world units) the tracking camera keeps framed around the stack. */
 const FRAME_HALF = 5.2;
+/** Ground tracking camera: far across the marsh on the land side, ocean horizon behind the pad. */
+const CAM_DIST = 115;
+const CAM_HEIGHT = 8.5;
+const CAM_ANGLE = 0.62;
+/** Framing half-heights before liftoff: wide establishing shot, easing in to the pad at liftoff. */
+const OPEN_HALF = 9;
+const LIFTOFF_HALF = 7.5;
 const SCROLL_DAMP = 4.5;
 
 const PAD_SUN = new THREE.Vector3(-0.55, 0.32, 0.78).normalize();
@@ -37,7 +44,7 @@ const PAD_SUN = new THREE.Vector3(-0.55, 0.32, 0.78).normalize();
 const SKY = {
   zenithLow: new THREE.Color("#1d56b4"),
   zenithHigh: new THREE.Color("#02040c"),
-  horizonLow: new THREE.Color("#a3b0c6"),
+  horizonLow: new THREE.Color("#9db6d3"),
   horizonHigh: new THREE.Color("#1d3d78"),
 };
 
@@ -95,7 +102,7 @@ function Scene({ onReady, quality }: { onReady: () => void; quality: QualitySett
       skyEnv.current = null;
     };
   }, [skyMat, gl]);
-  const fog = useMemo(() => new THREE.Fog("#9fb9d2", 40, 600), []);
+  const fog = useMemo(() => new THREE.Fog("#9fb9d2", 140, 2600), []);
 
   useEffect(() => {
     scene.fog = fog;
@@ -196,8 +203,9 @@ function Scene({ onReady, quality }: { onReady: () => void; quality: QualitySett
       skyMat.uniforms["uStars"]!.value = smooth(0.55, 1, a);
       skyMat.uniforms["uPhotoDim"]!.value = 1 - alt * 0.3;
       fog.color.copy(hor);
-      fog.near = 40 + alt * 200;
-      fog.far = 600 + alt * 1400;
+      // the camera sits far out across the marsh, so haze starts past the pad and thickens toward the horizon
+      fog.near = 140 + alt * 200;
+      fog.far = 2600 + alt * 1400;
       if (sun.current) {
         sun.current.intensity = 2.6;
         sun.current.position.copy(PAD_SUN).multiplyScalar(30).add(tmpV.set(0, st ? st.position.y : 0, 0));
@@ -222,20 +230,19 @@ function Scene({ onReady, quality }: { onReady: () => void; quality: QualitySett
     const cam = camera as THREE.PerspectiveCamera;
     let fov = BASE_FOV;
     if (!inSpace) {
-      // Long-lens tracking camera on the ground (like broadcast launch footage): it stays put after liftoff,
-      // tilts up to follow the stack and zooms in so the vehicle stays a similar size in frame.
-      const intro = smooth(0, LIFTOFF_AT, p);
-      const dist = 19 - intro * 4;
-      const ang = 0.62;
-      const rise = smooth(0.08, 1, a) * 9;
-      camera.position.set(Math.sin(ang) * dist + px, 2.6 + (1 - intro) * 1.4 + rise + py, Math.cos(ang) * dist);
-      const shake = srbThrust.current * (1 - smooth(0, 0.3, a)) * 0.05;
+      // Distant long-lens tracking camera, like broadcast launch footage shot from across the marsh:
+      // it never moves, only tilts up to follow the stack and zooms so the vehicle stays a similar size in frame.
+      camera.position.set(Math.sin(CAM_ANGLE) * CAM_DIST + px * 3, CAM_HEIGHT + py * 1.5, Math.cos(CAM_ANGLE) * CAM_DIST);
+      const shake = srbThrust.current * (1 - smooth(0, 0.3, a)) * 0.04;
       camera.position.x += (Math.random() - 0.5) * shake;
       camera.position.y += (Math.random() - 0.5) * shake;
-      lookTarget.set(sp.x, sp.y + 2.8 - smooth(0.02, 0.3, a) * 0.6, 0);
+      lookTarget.set(sp.x, sp.y + 2.4 - smooth(0.02, 0.3, a) * 0.4, 0);
       const d = camera.position.distanceTo(lookTarget);
-      const zoomOut = 1 + smooth(0.05, 0.6, a) * 0.7; // leave room for the exhaust column
-      fov = THREE.MathUtils.clamp(THREE.MathUtils.radToDeg(2 * Math.atan((FRAME_HALF * zoomOut) / d)), MIN_FOV, BASE_FOV);
+      // wide on the pad (tower, steam clouds, ocean horizon), tighter once the stack climbs
+      const padHalf = OPEN_HALF + (LIFTOFF_HALF - OPEN_HALF) * smooth(0, LIFTOFF_AT, p);
+      const climbHalf = FRAME_HALF * (1 + smooth(0.05, 0.6, a) * 0.7); // leave room for the exhaust column
+      const half = padHalf + (climbHalf - padHalf) * smooth(0.02, 0.3, a);
+      fov = THREE.MathUtils.clamp(THREE.MathUtils.radToDeg(2 * Math.atan(half / d)), MIN_FOV * 0.25, BASE_FOV);
     } else {
       const back = smooth(0.4, 1, b);
       const close = tmpV.set(sp.x + 5.5, sp.y - 0.5, 10);
@@ -254,8 +261,11 @@ function Scene({ onReady, quality }: { onReady: () => void; quality: QualitySett
     // portrait phones: widen the view so the stack and tower still fit across the narrow screen
     const portrait = cam.aspect < 1 ? THREE.MathUtils.clamp(0.8 / cam.aspect, 1, 2.2) : 1;
     if (portrait > 1) fov = Math.min(80, THREE.MathUtils.radToDeg(2 * Math.atan(Math.tan(THREE.MathUtils.degToRad(fov) / 2) * portrait)));
-    if (Math.abs(cam.fov - fov) > 0.01) {
+    // far ground camera: a larger near plane keeps depth precision so the layered ground (apron, roads) doesn't flicker
+    const near = inSpace ? 0.1 : 2;
+    if (Math.abs(cam.fov - fov) > 0.01 || cam.near !== near) {
       cam.fov = fov;
+      cam.near = near;
       cam.updateProjectionMatrix();
     }
   });
