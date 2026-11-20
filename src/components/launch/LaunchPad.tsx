@@ -8,7 +8,11 @@ import { launchState, smooth } from "./timeline";
 // Pad 39A-style launch complex. Scene units: the shuttle stack is ~5.1 tall.
 export const DECK_Y = 0; // Mobile launcher platform deck (SRB skirts sit here)
 const HARDSTAND_Y = -1.1; // Top of the raised concrete pad
-export const GROUND_Y = -1.6; // Surrounding marsh / grass
+export const GROUND_Y = -2.5; // Surrounding marsh / grass (the hardstand stands ~50 ft above it, like 39A)
+/** Hardstand footprint half-sizes: flat top and the foot of its sloped ramps. */
+const HS_TOP_X = 6.5;
+const HS_BOTTOM_X = 11.5;
+const HS_BOTTOM_Z = 10.1;
 const TOWER_X = -2.45;
 const TOWER_W = 1.1;
 /** FSS level spacing (20 ft at this scale) and level count; the roof sits well above the tank nose like the real tower. */
@@ -22,11 +26,11 @@ const COAST_Z = -70;
 
 // [x, z, width, height, depth] — service buildings around the pad perimeter
 const PAD_BUILDINGS: [number, number, number, number, number][] = [
-  [-11, -6, 2.4, 0.9, 1.6],
-  [-6.5, 12, 1.4, 0.6, 1],
+  [-14.5, -8, 2.4, 0.9, 1.6],
+  [-7, 13.5, 1.4, 0.6, 1],
   [8, -16, 3, 0.8, 1.4],
-  [12, 3, 1.2, 1.1, 1.2],
-  [-14, -2, 2, 0.7, 1.4],
+  [14, 4, 1.2, 1.1, 1.2],
+  [-16, 3, 2, 0.7, 1.4],
   [6, -13, 2.6, 1, 1.8],
   [-7, -14, 1.6, 0.6, 1.2],
   [18, -6, 1.8, 0.7, 1.1],
@@ -46,14 +50,14 @@ const MARSH_PONDS: [number, number, number, number][] = [
 ];
 
 /** Instanced scrub trees: squashed icosahedra scattered outside the pad clearing, avoiding the roads. */
-function buildTrees(count: number) {
+function buildTrees(count: number, shrub = false) {
   // one lumpy canopy = four jittered low-poly lobes, so the scrub reads as dense irregular vegetation, not blobs
-  let seed = 7;
+  let seed = shrub ? 11 : 7;
   const rand = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
   const lobes: THREE.BufferGeometry[] = [];
   for (let k = 0; k < 4; k++) {
     // indexed so the lobes shade smoothly (soft canopy, not faceted rocks)
-    const g = mergeVertices(new THREE.IcosahedronGeometry(0.55 + rand() * 0.3, 1).deleteAttribute("normal").deleteAttribute("uv"));
+    const g = mergeVertices(new THREE.IcosahedronGeometry(0.55 + rand() * 0.3, shrub ? 0 : 1).deleteAttribute("normal").deleteAttribute("uv"));
     const pos = g.getAttribute("position") as THREE.BufferAttribute;
     for (let v = 0; v < pos.count; v++) pos.setXYZ(v, pos.getX(v) * (0.85 + rand() * 0.3), pos.getY(v) * (0.7 + rand() * 0.3), pos.getZ(v) * (0.85 + rand() * 0.3));
     g.translate((rand() - 0.5) * 0.9, 0.35 + rand() * 0.35, (rand() - 0.5) * 0.9);
@@ -65,7 +69,12 @@ function buildTrees(count: number) {
   const colors: THREE.Color[] = [];
   const m = new THREE.Matrix4();
   const q = new THREE.Quaternion();
-  const palette = ["#263a19", "#2f4520", "#1f3014", "#3a5026", "#2b3d22", "#45552c"].map((c) => new THREE.Color(c));
+  // olive Florida scrub (oak, palmetto) with sun-bleached understory, as in the aerial pad photos
+  const palette = (
+    shrub
+      ? ["#4a5230", "#5a5f37", "#3d4727", "#66653f", "#4f5a33", "#6b6844"]
+      : ["#2d3b1d", "#3a4725", "#283318", "#46522c", "#334026", "#4f5a33"]
+  ).map((c) => new THREE.Color(c));
   // Florida scrub grows in dense hammocks: most trees huddle around cluster centres so canopies merge
   const centres: [number, number][] = [];
   for (let k = 0; k < Math.max(8, Math.round(count / 28)); k++) {
@@ -77,7 +86,7 @@ function buildTrees(count: number) {
   let guard = 0;
   while (mats.length < count && guard++ < count * 20) {
     let x: number, z: number;
-    if (rand() < 0.85) {
+    if (!shrub && rand() < 0.85) {
       const [cx, cz] = centres[Math.floor(rand() * centres.length)]!;
       const rr = Math.sqrt(rand()) * (2.5 + rand() * 3.5);
       const aa = rand() * Math.PI * 2;
@@ -85,15 +94,16 @@ function buildTrees(count: number) {
       z = cz + Math.sin(aa) * rr;
     } else {
       const r = 27 + Math.pow(rand(), 0.8) * 125;
-      const a = rand() * Math.PI * 2;
+      // understory is densest in the camera's view, where it fills the gaps between hammocks
+      const a = shrub && rand() < 0.6 ? CAMERA_AZIMUTH + (rand() - 0.5) * 1.4 : rand() * Math.PI * 2;
       x = Math.cos(a) * r;
       z = Math.sin(a) * r;
     }
     if (Math.hypot(x, z) < 27) continue; // pad clearing
     if (z < COAST_Z + 6) continue; // keep the beach clear
     if (Math.abs(x * Math.cos(0.55) - z * Math.sin(0.55)) < 3 && z > 0) continue; // crawlerway
-    const sx = 0.6 + rand() * 0.8;
-    const sy = 0.35 + rand() * 0.55;
+    const sx = shrub ? 0.9 + rand() * 1.2 : 0.6 + rand() * 0.8;
+    const sy = shrub ? 0.12 + rand() * 0.18 : 0.35 + rand() * 0.55;
     q.setFromEuler(new THREE.Euler(0, rand() * Math.PI * 2, 0));
     mats.push(m.compose(new THREE.Vector3(x, GROUND_Y - 0.05, z), q, new THREE.Vector3(sx, sy, sx * (0.7 + rand() * 0.6))).clone());
     const c = palette[Math.floor(rand() * palette.length)]!.clone().offsetHSL(0, 0, (rand() - 0.5) * 0.04);
@@ -153,10 +163,10 @@ function foliage(shader: THREE.WebGLProgramParametersWithUniforms) {
 }
 
 const LIGHT_MASTS: [number, number][] = [
-  [-10, 6],
-  [9.5, 6.5],
-  [-10.5, -8],
-  [10, -9],
+  [-13, 8.5],
+  [12.8, 8.5],
+  [-13, -10.5],
+  [12.8, -11],
   [3, 15],
   [-3.5, 15.5],
 ];
@@ -564,50 +574,171 @@ function buildTower() {
   };
 }
 
-/** Steel framing on the rotating service structure's outer face. */
-function buildRssFrame() {
-  const beams: Beam[] = [];
-  for (let x = 0.2; x <= 2.61; x += 0.48) beams.push({ p: [x, 1.6, -0.08], s: [0.05, 5.0, 0.05] });
-  for (let y = -0.85; y <= 4.1; y += 0.5) beams.push({ p: [1.4, y, -0.08], s: [2.6, 0.04, 0.05] });
-  return mergeBeams(beams);
+/**
+ * Rotating service structure (retracted): a big white clad payload-changeout block inside a steel lattice,
+ * hinged on the FSS, with work platforms on the vehicle side and an A-frame truss leg + wheel truck at the far end.
+ * Local frame: hinge at the origin, the structure runs along +x and back along -z.
+ */
+function buildRss() {
+  const frame: Beam[] = [];
+  const clad: Beam[] = [];
+  const decks: Beam[] = [];
+  const L = 4.2;
+  const D = 1.3;
+  const yb = 0.35;
+  const yt = 4.6;
+  const bay = L / 6;
+  // payload changeout room + upper machinery house
+  clad.push({ p: [2.35, (yb + yt) / 2 + 0.1, -D / 2], s: [2.0, yt - yb - 0.2, D - 0.1] });
+  clad.push({ p: [1.35, yt + 0.25, -D / 2], s: [1.0, 0.5, 0.8] });
+  clad.push({ p: [3.75, 1.3, -D - 0.12], s: [0.6, 0.9, 0.25] });
+  clad.push({ p: [0.7, 2.6, -D - 0.1], s: [0.5, 0.7, 0.2] });
+  // lattice on both long faces
+  for (const z of [0, -D]) {
+    for (let x = 0; x <= L + 0.001; x += bay) frame.push({ p: [x, (yb + yt) / 2, z], s: [0.055, yt - yb, 0.055] });
+    for (let y = yb; y <= yt + 0.001; y += LEVEL) frame.push({ p: [L / 2, y, z], s: [L, 0.035, 0.035] });
+    for (let x = 0; x < L - 0.001; x += bay)
+      for (let y = yb; y < yt - 0.001; y += LEVEL * 2) {
+        const y1 = Math.min(y + LEVEL * 2, yt);
+        frame.push(strut([x, y, z], [x + bay, y1, z], 0.022));
+        frame.push(strut([x + bay, y, z], [x, y1, z], 0.022));
+      }
+  }
+  for (let x = 0; x <= L + 0.001; x += bay)
+    for (const y of [yb, yt, (yb + yt) / 2]) frame.push({ p: [x, y, -D / 2], s: [0.035, 0.035, D] });
+  decks.push({ p: [L / 2, yb - 0.06, -D / 2], s: [L + 0.1, 0.12, D + 0.1] });
+  decks.push({ p: [L / 2, yt + 0.02, -D / 2], s: [L + 0.1, 0.05, D + 0.1] });
+  // work platforms and stairs on the vehicle side
+  for (const [y, x, w] of [
+    [1.25, 1.0, 0.8],
+    [2.0, 3.5, 0.7],
+    [2.85, 0.9, 0.7],
+    [3.7, 3.3, 0.9],
+    [4.2, 2.0, 0.6],
+  ] as const) {
+    decks.push({ p: [x, y, 0.25], s: [w, 0.04, 0.5] });
+    frame.push({ p: [x, y + 0.15, 0.5], s: [w, 0.011, 0.011] });
+  }
+  for (let k = 0; k < 6; k++) frame.push(strut([3.9, yb + k * 0.7, 0.15], [4.15, yb + (k + 0.5) * 0.7, 0.15], 0.06));
+  // hinge column down to the hardstand
+  for (const z of [0, -D]) frame.push({ p: [0, (HARDSTAND_Y + yb) / 2, z], s: [0.09, yb - HARDSTAND_Y, 0.09] });
+  // far-end A-frame truss legs and the wheel truck that rides the circular rail
+  const yf = HARDSTAND_Y + 0.3;
+  for (const z of [0.1, -D - 0.1]) {
+    frame.push(strut([L - 0.9, yb, z], [L - 0.25, yf, z], 0.07));
+    frame.push(strut([L + 0.1, yb, z], [L - 0.25, yf, z], 0.07));
+    frame.push({ p: [L - 0.4, (yb + yf) / 2, z], s: [0.7, 0.03, 0.03] });
+  }
+  frame.push(strut([L - 0.25, yf, 0.1], [L - 0.6, yb, -D - 0.1], 0.03));
+  frame.push(strut([L - 0.25, yf, -D - 0.1], [L - 0.6, yb, 0.1], 0.03));
+  decks.push({ p: [L - 0.25, HARDSTAND_Y + 0.15, -D / 2], s: [0.55, 0.3, D + 0.45] });
+  return { frame: mergeBeams(frame, 0.18), clad: mergeBeams(clad, 0.1), decks: mergeBeams(decks, 0.12) };
 }
 
-/** Mobile launcher platform: deck with exhaust holes, pedestals and tail service masts. */
+/** Mobile launcher platform: deck with exhaust holes, pedestals, tail service masts and pipe runs along the sides. */
 function buildPlatform() {
+  const HX = 1.7;
+  const HZ = 1.75;
   const body: Beam[] = [
-    { p: [0, DECK_Y - 0.35, 0], s: [3.4, 0.7, 2.8] },
+    { p: [0, DECK_Y - 0.35, 0], s: [HX * 2, 0.7, HZ * 2] },
     { p: [-0.48, DECK_Y + 0.25, 0.98], s: [0.3, 0.5, 0.34] },
     { p: [0.48, DECK_Y + 0.25, 0.98], s: [0.3, 0.5, 0.34] },
   ];
-  for (const x of [-1.4, 1.4])
-    for (const z of [-1.1, 1.1]) body.push({ p: [x, (HARDSTAND_Y + DECK_Y - 0.7) / 2, z], s: [0.35, DECK_Y - 0.7 - HARDSTAND_Y, 0.35] });
+  for (const x of [-1.35, 1.35])
+    for (const z of [-1.35, 1.35]) body.push({ p: [x, (HARDSTAND_Y + DECK_Y - 0.7) / 2, z], s: [0.38, DECK_Y - 0.7 - HARDSTAND_Y, 0.38] });
   // vertical stiffener ribs on all four faces
   for (let x = -1.6; x <= 1.61; x += 0.32)
-    for (const z of [-1.41, 1.41]) body.push({ p: [x, DECK_Y - 0.35, z], s: [0.05, 0.68, 0.04] });
-  for (let z = -1.2; z <= 1.21; z += 0.4)
-    for (const x of [-1.71, 1.71]) body.push({ p: [x, DECK_Y - 0.35, z], s: [0.04, 0.68, 0.05] });
-  // mid-height ledge
-  body.push({ p: [0, DECK_Y - 0.4, 0], s: [3.5, 0.05, 2.9] });
+    for (const z of [-HZ - 0.01, HZ + 0.01]) body.push({ p: [x, DECK_Y - 0.35, z], s: [0.05, 0.68, 0.04] });
+  for (let z = -1.6; z <= 1.61; z += 0.4)
+    for (const x of [-HX - 0.01, HX + 0.01]) body.push({ p: [x, DECK_Y - 0.35, z], s: [0.04, 0.68, 0.05] });
+  body.push({ p: [0, DECK_Y - 0.4, 0], s: [HX * 2 + 0.1, 0.05, HZ * 2 + 0.1] });
   // equipment huts and cable boxes along the deck edges
   for (const [x, z, w, h, d] of [
-    [-1.35, -1.05, 0.5, 0.22, 0.4],
-    [1.3, -1.1, 0.6, 0.16, 0.35],
-    [1.35, 1.0, 0.45, 0.28, 0.45],
-    [-1.4, 1.05, 0.4, 0.18, 0.35],
-    [0, -1.2, 0.8, 0.12, 0.25],
+    [-1.3, -1.4, 0.5, 0.22, 0.4],
+    [1.25, -1.45, 0.6, 0.16, 0.35],
+    [1.3, 1.4, 0.45, 0.28, 0.45],
+    [-1.35, 1.45, 0.4, 0.18, 0.35],
+    [0, -1.5, 0.8, 0.12, 0.25],
+    [1.45, 0.2, 0.25, 0.35, 0.3],
   ] as const)
     body.push({ p: [x, DECK_Y + h / 2, z], s: [w, h, d] });
+  // stair towers at two corners, down to the hardstand
+  for (const [x, z] of [[1.95, 1.2], [-1.95, -1.2]] as const) {
+    body.push({ p: [x, (HARDSTAND_Y + DECK_Y) / 2, z], s: [0.3, DECK_Y - HARDSTAND_Y, 0.3] });
+  }
   const rails: Beam[] = [];
-  for (const z of [-1.38, 1.38]) rails.push({ p: [0, DECK_Y + 0.14, z], s: [3.4, 0.012, 0.012] });
-  for (const x of [-1.68, 1.68]) rails.push({ p: [x, DECK_Y + 0.14, 0], s: [0.012, 0.012, 2.8] });
+  for (const z of [-HZ + 0.02, HZ - 0.02]) rails.push({ p: [0, DECK_Y + 0.14, z], s: [HX * 2, 0.012, 0.012] });
+  for (const x of [-HX + 0.02, HX - 0.02]) rails.push({ p: [x, DECK_Y + 0.14, 0], s: [0.012, 0.012, HZ * 2] });
   for (let x = -1.6; x <= 1.61; x += 0.32)
-    for (const z of [-1.38, 1.38]) rails.push({ p: [x, DECK_Y + 0.07, z], s: [0.01, 0.14, 0.01] });
+    for (const z of [-HZ + 0.02, HZ - 0.02]) rails.push({ p: [x, DECK_Y + 0.07, z], s: [0.01, 0.14, 0.01] });
   const holes: Beam[] = [
     { p: [-0.65, DECK_Y + 0.004, 0], s: [0.62, 0.01, 0.62] },
     { p: [0.65, DECK_Y + 0.004, 0], s: [0.62, 0.01, 0.62] },
     { p: [0, DECK_Y + 0.004, 0.62], s: [0.7, 0.01, 0.5] },
   ];
-  return { body: mergeBeams(body), holes: mergeBeams(holes), rails: mergeBeams(rails) };
+  // white propellant / water pipe runs along the long faces (the photos show them running the full length)
+  const pipes: THREE.BufferGeometry[] = [];
+  for (const z of [-HZ - 0.06, HZ + 0.06])
+    for (const [y, r] of [[DECK_Y - 0.16, 0.035], [DECK_Y - 0.27, 0.025], [DECK_Y - 0.58, 0.04]] as const)
+      pipes.push(new THREE.CylinderGeometry(r, r, HX * 2 + 0.2, 8).rotateZ(Math.PI / 2).translate(0, y, z));
+  return { body: mergeBeams(body), holes: mergeBeams(holes), rails: mergeBeams(rails), pipes: mergeGeometries(pipes)! };
+}
+
+/** A white pipe from a to b (used for the runs climbing the hardstand ramps). */
+function pipeBetween(a: [number, number, number], b: [number, number, number], r: number) {
+  const va = new THREE.Vector3(...a);
+  const d = new THREE.Vector3(...b).sub(va);
+  const g = new THREE.CylinderGeometry(r, r, d.length(), 8);
+  g.applyQuaternion(new THREE.Quaternion().setFromUnitVectors(UP, d.clone().normalize()));
+  g.translate(va.x + d.x / 2, va.y + d.y / 2, va.z + d.z / 2);
+  return g;
+}
+
+/**
+ * Raised Pad 39A hardstand: flat concrete top with long sloped ramps, and the flame-trench exits at both
+ * x ends — a walled opening with support columns and white tanks inside, like the photos.
+ */
+function buildHardstand() {
+  const H = HARDSTAND_Y - GROUND_Y;
+  const zs = HS_BOTTOM_Z / HS_BOTTOM_X;
+  const ramp = new THREE.CylinderGeometry(HS_TOP_X * Math.SQRT2, HS_BOTTOM_X * Math.SQRT2, H, 4, 1)
+    .rotateY(Math.PI / 4)
+    .scale(1, 1, zs)
+    .translate(0, GROUND_Y + H / 2, 0);
+  const walls: Beam[] = [];
+  const dark: Beam[] = [];
+  const cols: Beam[] = [];
+  const tanks: THREE.BufferGeometry[] = [];
+  const W = 1.9;
+  const x0 = HS_TOP_X - 0.5;
+  const x1 = HS_BOTTOM_X;
+  const len = x1 - x0;
+  const back = x1 - 1.6;
+  for (const k of [-1, 1]) {
+    walls.push({ p: [k * (x0 + len / 2), HARDSTAND_Y - 0.13, 0], s: [len, 0.26, W * 2] });
+    for (const z of [-W + 0.15, W - 0.15]) walls.push({ p: [k * (x0 + len / 2), GROUND_Y + H / 2, z], s: [len, H, 0.3] });
+    dark.push({ p: [k * (back + 0.8), GROUND_Y + 0.235, 0], s: [1.6, 0.47, W * 2 - 0.3] });
+    dark.push({ p: [k * back, GROUND_Y + H / 2, 0], s: [0.1, H, W * 2 - 0.3] });
+    for (const z of [-0.85, 0, 0.85]) cols.push({ p: [k * (x1 - 0.15), GROUND_Y + H / 2, z], s: [0.2, H - 0.05, 0.2] });
+    for (const z of [-1.2, -0.4, 0.4, 1.2])
+      tanks.push(new THREE.CylinderGeometry(0.17, 0.17, 0.62, 14).translate(k * (back + 0.55), GROUND_Y + 0.47 + 0.31, z));
+  }
+  // pipe runs and a stairway climbing the +z ramp
+  const rampPipes: THREE.BufferGeometry[] = [];
+  const zTop = HS_TOP_X * zs;
+  const zBot = HS_BOTTOM_Z;
+  for (const [x, r] of [[3.2, 0.06], [3.5, 0.045], [-5, 0.05]] as const)
+    rampPipes.push(pipeBetween([x, HARDSTAND_Y + 0.08, zTop - 0.3], [x, GROUND_Y + 0.08, zBot + 0.6], r));
+  const stairLen = Math.hypot(zBot - zTop, H);
+  walls.push({ p: [-3.2, GROUND_Y + H / 2 + 0.04, (zTop + zBot) / 2], s: [0.35, 0.05, stairLen], r: [Math.atan2(H, zBot - zTop), 0, 0] });
+  return {
+    ramp,
+    walls: mergeBeams(walls, 0.06),
+    dark: mergeBeams(dark),
+    cols: mergeBeams(cols, 0.05),
+    tanks: mergeGeometries(tanks)!,
+    pipes: mergeGeometries(rampPipes)!,
+  };
 }
 
 /** Pad 39A-style launch complex with retracting access arms, crawlerway, water tower and coastline. */
@@ -618,14 +749,17 @@ export function LaunchPad({ trees = 600 }: { trees?: number }) {
       concrete: concreteTexture(),
       gravel: gravelTexture(),
       sand: sandTexture(),
-      mlp: panelTexture("#7b7e82", "rgba(30,30,30,0.25)"),
+      mlp: panelTexture("#9a9ea2", "rgba(30,30,30,0.25)"),
       rss: panelTexture("#b4b6b8", "rgba(50,52,55,0.25)"),
+      clad: panelTexture("#ebeae5", "rgba(70,70,70,0.2)"),
     }),
     [],
   );
   const tower = useMemo(buildTower, []);
   const platform = useMemo(buildPlatform, []);
-  const rssFrame = useMemo(buildRssFrame, []);
+  const rss = useMemo(buildRss, []);
+  const hardstand = useMemo(buildHardstand, []);
+  const shrubs = useMemo(() => buildTrees(trees, true), [trees]);
   const ocean = useMemo(createOceanMaterial, []);
   const forest = useMemo(() => buildTrees(trees), [trees]);
   const goxArm = useRef<THREE.Group>(null);
@@ -689,6 +823,9 @@ export function LaunchPad({ trees = 600 }: { trees?: number }) {
       <instancedMesh args={[forest.geometry, undefined, forest.count]} ref={forest.attach} castShadow receiveShadow>
         <meshStandardMaterial vertexColors={false} roughness={0.95} onBeforeCompile={foliage} />
       </instancedMesh>
+      <instancedMesh args={[shrubs.geometry, undefined, shrubs.count]} ref={shrubs.attach} receiveShadow>
+        <meshStandardMaterial vertexColors={false} roughness={1} onBeforeCompile={foliage} />
+      </instancedMesh>
 
       {/* Perimeter road and pad access road */}
       <mesh rotation={[-Math.PI / 2, 0, Math.PI / 8]} position={[0, GROUND_Y + 0.025, 0]} receiveShadow>
@@ -739,17 +876,24 @@ export function LaunchPad({ trees = 600 }: { trees?: number }) {
           </mesh>
         </group>
       ))}
-      {[-1, 1].map((k) => (
-        <mesh key={`pipe${k}`} position={[k * 4.5, GROUND_Y + 0.12, 10]} rotation={[0, k * 0.3, 0]}>
-          <boxGeometry args={[0.18, 0.18, 12]} />
-          {grey}
-        </mesh>
-      ))}
-
-      {/* Raised hardstand (octagonal) with flame trench */}
-      <mesh position={[0, (HARDSTAND_Y + GROUND_Y) / 2, 0]} rotation={[0, Math.PI / 8, 0]} receiveShadow castShadow>
-        <cylinderGeometry args={[6.2, 7.4, HARDSTAND_Y - GROUND_Y, 8]} />
-        <meshStandardMaterial map={tex.concrete} roughness={0.95} />
+      {/* Raised hardstand with sloped ramps and flame-trench exits */}
+      <mesh geometry={hardstand.ramp} receiveShadow castShadow>
+        <meshStandardMaterial map={tex.concrete} color="#e6d6b4" roughness={0.95} />
+      </mesh>
+      <mesh geometry={hardstand.walls} receiveShadow castShadow>
+        <meshStandardMaterial map={tex.concrete} color="#ddcfb0" roughness={0.95} vertexColors />
+      </mesh>
+      <mesh geometry={hardstand.dark}>
+        <meshStandardMaterial color="#1c1a17" roughness={1} />
+      </mesh>
+      <mesh geometry={hardstand.cols} castShadow>
+        <meshStandardMaterial map={tex.concrete} color="#cfc2a4" roughness={0.95} vertexColors />
+      </mesh>
+      <mesh geometry={hardstand.tanks}>
+        <meshStandardMaterial color="#dedcd6" roughness={0.5} metalness={0.2} />
+      </mesh>
+      <mesh geometry={hardstand.pipes} castShadow>
+        {white}
       </mesh>
       <mesh position={[0, HARDSTAND_Y + 0.005, 0]}>
         <boxGeometry args={[12.5, 0.01, 1.5]} />
@@ -766,16 +910,19 @@ export function LaunchPad({ trees = 600 }: { trees?: number }) {
       <mesh geometry={platform.holes}>
         <meshStandardMaterial color="#0d0c0c" roughness={1} />
       </mesh>
+      <mesh geometry={platform.pipes} castShadow>
+        {white}
+      </mesh>
 
       {/* Fixed service structure */}
       <mesh geometry={tower.steel} castShadow>
-        <meshStandardMaterial color="#a3a6a8" roughness={0.6} metalness={0.5} vertexColors />
+        <meshStandardMaterial color="#c6c9cb" roughness={0.6} metalness={0.45} vertexColors />
       </mesh>
       <mesh geometry={tower.decks} castShadow receiveShadow>
-        <meshStandardMaterial color="#7f8387" roughness={0.65} metalness={0.4} vertexColors />
+        <meshStandardMaterial color="#9fa3a7" roughness={0.65} metalness={0.4} vertexColors />
       </mesh>
       <mesh geometry={tower.clad} castShadow receiveShadow>
-        <meshStandardMaterial map={tex.rss} color="#d2d0c8" roughness={0.75} metalness={0.15} vertexColors />
+        <meshStandardMaterial map={tex.clad} color="#f0eee8" roughness={0.75} metalness={0.1} vertexColors />
       </mesh>
       <mesh geometry={tower.pipes} castShadow>
         {white}
@@ -829,16 +976,14 @@ export function LaunchPad({ trees = 600 }: { trees?: number }) {
 
       {/* Rotating service structure, swung back */}
       <group position={[TOWER_X + 0.2, 0, -TOWER_W / 2]} rotation={[0, 0.75, 0]}>
-        <mesh position={[1.4, 1.6, -0.7]} castShadow receiveShadow>
-          <boxGeometry args={[2.6, 5.0, 1.2]} />
-          <meshStandardMaterial map={tex.rss} roughness={0.75} metalness={0.15} />
+        <mesh geometry={rss.clad} castShadow receiveShadow>
+          <meshStandardMaterial map={tex.clad} color="#f2f0ea" roughness={0.72} metalness={0.1} vertexColors />
         </mesh>
-        <mesh geometry={rssFrame} position={[0, 0, -0.7 + 0.6]} castShadow>
-          {steel}
+        <mesh geometry={rss.frame} castShadow>
+          <meshStandardMaterial color="#c6c9cb" roughness={0.6} metalness={0.45} vertexColors />
         </mesh>
-        <mesh position={[2.75, -0.35, -0.7]}>
-          <boxGeometry args={[0.2, 1.4, 0.2]} />
-          {grey}
+        <mesh geometry={rss.decks} castShadow receiveShadow>
+          <meshStandardMaterial color="#9fa3a7" roughness={0.65} metalness={0.4} vertexColors />
         </mesh>
       </group>
 

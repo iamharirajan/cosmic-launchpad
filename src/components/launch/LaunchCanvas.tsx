@@ -25,7 +25,6 @@ import {
 // Feel constants
 const ASCENT_HEIGHT = 75;
 const MAX_TILT = 0.55;
-const ROLL = Math.PI / 2; // roll program: orbiter swings to the downrange side (heads-down) after clearing the tower
 const BASE_FOV = 38;
 const MIN_FOV = 6;
 /** Half-height (world units) the tracking camera keeps framed around the stack. */
@@ -150,10 +149,10 @@ function Scene({ onReady, quality }: { onReady: () => void; quality: QualitySett
         const lift = Math.pow(a, 2.2) * ASCENT_HEIGHT;
         const tilt = -MAX_TILT * Math.pow(a, 1.5);
         const shake = srbOn * (1 - a) * 0.012;
-        const roll = ROLL * smooth(0.03, 0.16, a) * (1 - smooth(0.85, 1, a));
         st.position.set(Math.pow(a, 3) * 14 + (Math.random() - 0.5) * shake, lift, 0);
         st.rotation.order = "ZYX";
-        st.rotation.set(0, roll, tilt);
+        // no roll program: it read as a sudden left-to-right spin, and space keeps the same heading
+        st.rotation.set(0, 0, tilt);
       } else {
         const turn = -MAX_TILT - (Math.PI / 2 - 0.2 - MAX_TILT) * smooth(0.15, 0.95, b);
         st.position.set(b * 3, Math.sin(t * 0.4) * 0.05, 0);
