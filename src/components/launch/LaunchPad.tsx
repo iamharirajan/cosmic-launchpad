@@ -11,7 +11,13 @@ const HARDSTAND_Y = -1.1; // Top of the raised concrete pad
 export const GROUND_Y = -1.6; // Surrounding marsh / grass
 const TOWER_X = -2.45;
 const TOWER_W = 1.1;
-const TOWER_TOP = 5.6;
+/** FSS level spacing (20 ft at this scale) and level count; the roof sits well above the tank nose like the real tower. */
+const LEVEL = 0.55;
+const TOWER_LEVELS = 15;
+const TOWER_TOP = HARDSTAND_Y + LEVEL * TOWER_LEVELS;
+/** Lightning mast: lattice base up to MAST_FOOT above the roof, fibreglass mast to MAST_TOP. */
+const MAST_FOOT = 1.0;
+const MAST_TOP = TOWER_TOP + 3.4;
 const COAST_Z = -70;
 
 // [x, z, width, height, depth] — service buildings around the pad perimeter
@@ -320,7 +326,13 @@ const panelTexture = (base: string, line: string) =>
 
 type Beam = { p: [number, number, number]; s: [number, number, number]; r?: [number, number, number] };
 
-function mergeBeams(beams: Beam[]) {
+/**
+ * Merge boxes into one geometry. With `weather > 0` every beam gets its own slightly different paint tone
+ * (vertex colour, a few with a rust cast) so painted steel reads as weathered instead of CG-uniform.
+ */
+function mergeBeams(beams: Beam[], weather = 0) {
+  let seed = 7919;
+  const rand = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
   const geos = beams.map((b) => {
     const g = new THREE.BoxGeometry(...b.s);
     const m = new THREE.Matrix4().compose(
@@ -329,69 +341,227 @@ function mergeBeams(beams: Beam[]) {
       new THREE.Vector3(1, 1, 1),
     );
     g.applyMatrix4(m);
+    if (weather > 0) {
+      const k = 1 - rand() * weather;
+      const rust = rand() < 0.2 ? rand() * weather : 0;
+      const tone = [k + rust * 0.2, k - rust * 0.1, k - rust * 0.4];
+      const n = g.attributes["position"]!.count;
+      const cols = new Float32Array(n * 3);
+      for (let i = 0; i < n; i++) cols.set(tone, i * 3);
+      g.setAttribute("color", new THREE.BufferAttribute(cols, 3));
+    }
     return g;
   });
   return mergeGeometries(geos)!;
 }
 
-/** Fixed service structure: square grey steel lattice tower with platforms, hammerhead crane and lightning mast. */
+const UP = new THREE.Vector3(0, 1, 0);
+/** A straight member of square section `t` from point a to point b. */
+function strut(a: [number, number, number], b: [number, number, number], t: number): Beam {
+  const va = new THREE.Vector3(...a);
+  const d = new THREE.Vector3(...b).sub(va);
+  const len = d.length();
+  const e = new THREE.Euler().setFromQuaternion(new THREE.Quaternion().setFromUnitVectors(UP, d.normalize()));
+  const mid = va.addScaledVector(d, len / 2);
+  return { p: [mid.x, mid.y, mid.z], s: [t, len, t], r: [e.x, e.y, e.z] };
+}
+
+type Face = "x" | "-x" | "z" | "-z";
+/** Clad bays [level, face, width fraction, offset along face]: the real FSS is partly enclosed, not an open lattice. */
+const CLAD_BAYS: [number, Face, number, number][] = [
+  [1, "-x", 1, 0], [1, "-z", 1, 0], [2, "-x", 1, 0], [3, "z", 0.5, -0.25], [4, "-z", 1, 0],
+  [5, "-x", 0.5, 0.25], [6, "z", 0.5, 0.25], [6, "-x", 1, 0], [8, "-z", 0.5, -0.25], [9, "z", 0.5, -0.25],
+  [10, "-x", 1, 0], [12, "z", 1, 0], [12, "-z", 1, 0], [13, "x", 0.5, 0.25], [13, "z", 1, 0],
+  [14, "-x", 1, 0], [14, "z", 1, 0], [14, "-z", 1, 0],
+];
+
+/**
+ * Fixed service structure: tall square steel lattice of 20-ft levels with heavy corner columns, X-bracing,
+ * grated floors and handrails, clad equipment rooms, an outside stair tower, elevator shaft, feed lines,
+ * the emergency slidewire platform, a hammerhead crane on the roof and the lightning mast base.
+ */
 function buildTower() {
   const steel: Beam[] = [];
   const decks: Beam[] = [];
+  const clad: Beam[] = [];
   const h = TOWER_TOP - HARDSTAND_Y;
   const w = TOWER_W;
   const half = w / 2;
   const cx = TOWER_X;
   const y0 = HARDSTAND_Y;
+
+  // columns: heavy corners, lighter mid-face
   for (const dx of [-half, 0, half])
     for (const dz of [-half, 0, half]) {
       if (dx === 0 && dz === 0) continue;
-      steel.push({ p: [cx + dx, y0 + h / 2, dz], s: [0.06, h, 0.06] });
+      const corner = dx !== 0 && dz !== 0;
+      steel.push({ p: [cx + dx, y0 + h / 2, dz], s: corner ? [0.085, h, 0.085] : [0.05, h, 0.05] });
     }
-  const step = 0.42;
-  for (let y = y0 + step; y < TOWER_TOP; y += step) {
-    for (const dz of [-half, half]) steel.push({ p: [cx, y, dz], s: [w, 0.035, 0.035] });
-    for (const dx of [-half, half]) steel.push({ p: [cx + dx, y, 0], s: [0.035, 0.035, w] });
-    const diag = Math.hypot(half, step);
-    const ang = Math.atan2(half, step);
-    // X-bracing on each face (two bays per face)
+
+  const diag = Math.hypot(half, LEVEL);
+  const ang = Math.atan2(half, LEVEL);
+  for (let L = 1; L <= TOWER_LEVELS; L++) {
+    const y = y0 + L * LEVEL;
+    // ring girders + lighter mid-level girts
+    for (const dz of [-half, half]) {
+      steel.push({ p: [cx, y, dz], s: [w, 0.05, 0.045] });
+      steel.push({ p: [cx, y - LEVEL / 2, dz], s: [w, 0.022, 0.022] });
+    }
+    for (const dx of [-half, half]) {
+      steel.push({ p: [cx + dx, y, 0], s: [0.045, 0.05, w] });
+      steel.push({ p: [cx + dx, y - LEVEL / 2, 0], s: [0.022, 0.022, w] });
+    }
+    // X-bracing on each face, two bays per face
     for (const dz of [-half, half])
       for (const k of [-1, 1]) {
-        steel.push({ p: [cx + (k * half) / 2, y - step / 2, dz], s: [0.022, diag, 0.022], r: [0, 0, k * ang] });
-        steel.push({ p: [cx + (k * half) / 2, y - step / 2, dz], s: [0.022, diag, 0.022], r: [0, 0, -k * ang] });
+        steel.push({ p: [cx + (k * half) / 2, y - LEVEL / 2, dz], s: [0.026, diag, 0.026], r: [0, 0, k * ang] });
+        steel.push({ p: [cx + (k * half) / 2, y - LEVEL / 2, dz], s: [0.026, diag, 0.026], r: [0, 0, -k * ang] });
       }
     for (const dx of [-half, half])
       for (const k of [-1, 1]) {
-        steel.push({ p: [cx + dx, y - step / 2, (k * half) / 2], s: [0.022, diag, 0.022], r: [k * ang, 0, 0] });
-        steel.push({ p: [cx + dx, y - step / 2, (k * half) / 2], s: [0.022, diag, 0.022], r: [-k * ang, 0, 0] });
+        steel.push({ p: [cx + dx, y - LEVEL / 2, (k * half) / 2], s: [0.026, diag, 0.026], r: [k * ang, 0, 0] });
+        steel.push({ p: [cx + dx, y - LEVEL / 2, (k * half) / 2], s: [0.026, diag, 0.026], r: [-k * ang, 0, 0] });
       }
-    if (Math.round((y - y0) / step) % 3 === 0) decks.push({ p: [cx, y + 0.02, 0], s: [w + 0.12, 0.03, w + 0.12] });
+    // grated floor every level, heavier floor every other level, overhanging the frame
+    if (L < TOWER_LEVELS) decks.push({ p: [cx, y + 0.015, 0], s: [w + 0.14, L % 2 === 0 ? 0.04 : 0.018, w + 0.14] });
+    // handrails (top + knee rail) and posts round the overhang
+    const e = half + 0.07;
+    for (const ry of [y + 0.17, y + 0.09]) {
+      for (const dz of [-e, e]) steel.push({ p: [cx, ry, dz], s: [w + 0.14, 0.011, 0.011] });
+      for (const dx of [-e, e]) steel.push({ p: [cx + dx, ry, 0], s: [0.011, 0.011, w + 0.14] });
+    }
+    for (let t = -e; t <= e + 0.001; t += (2 * e) / 5) {
+      for (const dz of [-e, e]) steel.push({ p: [cx + t, y + 0.085, dz], s: [0.011, 0.17, 0.011] });
+      for (const dx of [-e, e]) steel.push({ p: [cx + dx, y + 0.085, t], s: [0.011, 0.17, 0.011] });
+    }
+    // pipe-rack brackets on the pad face
+    steel.push({ p: [cx + half + 0.06, y - 0.12, 0.05], s: [0.12, 0.025, 0.95] });
   }
-  // hammerhead crane + roof
-  decks.push({ p: [cx, TOWER_TOP + 0.05, 0], s: [w + 0.2, 0.1, w + 0.2] });
-  steel.push({ p: [cx + 0.3, TOWER_TOP + 0.35, 0], s: [2.2, 0.16, 0.16] });
-  steel.push({ p: [cx - 0.1, TOWER_TOP + 0.2, 0], s: [0.3, 0.3, 0.3] });
-  // equipment rooms on a few levels (gives the FSS its cluttered silhouette)
-  for (const y of [y0 + 1.3, y0 + 2.6, y0 + 3.9, y0 + 5.2])
-    decks.push({ p: [cx - 0.15, y + 0.22, half * 0.4], s: [w * 0.6, 0.4, w * 0.5] });
-  for (const y of [y0 + 0.9, y0 + 2.2, y0 + 3.5, y0 + 4.8])
-    decks.push({ p: [cx + half + 0.18, y, -half + 0.2], s: [0.36, 0.05, 0.5] });
-  // deck railings on the platform levels
-  for (let y = y0 + step * 3; y < TOWER_TOP; y += step * 3) {
-    const ry = y + 0.16;
-    for (const dz of [-half - 0.06, half + 0.06]) steel.push({ p: [cx, ry, dz], s: [w + 0.12, 0.012, 0.012] });
-    for (const dx of [-half - 0.06, half + 0.06]) steel.push({ p: [cx + dx, ry, 0], s: [0.012, 0.012, w + 0.12] });
+
+  // clad bays and interior equipment rooms
+  for (const [L, face, frac, off] of CLAD_BAYS) {
+    const yc = y0 + (L - 0.5) * LEVEL;
+    const span = w * frac;
+    const hgt = LEVEL * 0.92;
+    if (face === "z" || face === "-z") clad.push({ p: [cx + off * w, yc, (face === "z" ? 1 : -1) * (half - 0.03)], s: [span, hgt, 0.025] });
+    else clad.push({ p: [cx + (face === "x" ? 1 : -1) * (half - 0.03), yc, off * w], s: [0.025, hgt, span] });
   }
-  // elevator shaft & cable trays
-  decks.push({ p: [cx - half - 0.12, y0 + h / 2, -0.25], s: [0.22, h, 0.3] });
+  for (const L of [2, 5, 7, 11, 13]) decks.push({ p: [cx - 0.15, y0 + (L - 0.55) * LEVEL, -half * 0.35], s: [w * 0.55, LEVEL * 0.72, w * 0.45] });
+
+  // outside stair tower on the +z face: switchback flights with landings
+  const sz = half + 0.2;
+  const run = w - 0.25;
+  const rise = LEVEL / 2;
+  const flight = Math.hypot(run, rise);
+  for (const dx of [-half, half]) steel.push({ p: [cx + dx, y0 + h / 2, sz + 0.13], s: [0.04, h, 0.04] });
+  for (let L = 1; L <= TOWER_LEVELS; L++)
+    for (const dx of [-half, half]) steel.push({ p: [cx + dx, y0 + L * LEVEL, half + 0.15], s: [0.03, 0.03, 0.3] });
+  for (let k = 0; k < TOWER_LEVELS * 2; k++) {
+    const ya = y0 + k * rise;
+    const dir = k % 2 === 0 ? 1 : -1;
+    const a = Math.atan2(rise, run) * dir;
+    decks.push({ p: [cx, ya + rise / 2, sz], s: [flight, 0.022, 0.2], r: [0, 0, a] });
+    steel.push({ p: [cx, ya + rise / 2 + 0.15, sz + 0.11], s: [flight, 0.011, 0.011], r: [0, 0, a] });
+    decks.push({ p: [cx + dir * (run / 2 + 0.07), ya + rise, sz], s: [0.16, 0.025, 0.22] });
+  }
+
+  // elevator shaft (runs up past the roof into the machine room) and cable trays
+  clad.push({ p: [cx - half - 0.14, y0 + (h + 0.55) / 2, -0.25], s: [0.26, h + 0.55, 0.32] });
+  for (let L = 1; L <= TOWER_LEVELS; L++) steel.push({ p: [cx - half - 0.14, y0 + L * LEVEL, -0.25], s: [0.3, 0.03, 0.36] });
+  decks.push({ p: [cx + half + 0.04, y0 + (h - 1) / 2, -0.44], s: [0.05, h - 1, 0.12] });
+
+  // emergency egress: slidewire platform on the 195-ft level, baskets parked under it
+  const egressY = y0 + 10 * LEVEL;
+  decks.push({ p: [cx - half - 0.42, egressY, 0.32], s: [0.56, 0.035, 0.7] });
+  for (const dz of [0.04, 0.6]) steel.push({ p: [cx - half - 0.42, egressY + 0.15, dz], s: [0.56, 0.012, 0.012] });
+  const slideStarts: THREE.Vector3[] = [];
+  for (let i = 0; i < 7; i++) {
+    const z = 0.04 + i * 0.093;
+    slideStarts.push(new THREE.Vector3(cx - half - 0.62, egressY + 0.32, z));
+    clad.push({ p: [cx - half - 0.68, egressY - 0.08, z], s: [0.12, 0.1, 0.075] });
+  }
+  steel.push({ p: [cx - half - 0.66, egressY + 0.16, 0.32], s: [0.03, 0.32, 0.7] });
+
+  // roof, roof house and hammerhead crane
+  const roofY = TOWER_TOP;
+  decks.push({ p: [cx, roofY + 0.05, 0], s: [w + 0.2, 0.1, w + 0.2] });
+  clad.push({ p: [cx - 0.22, roofY + 0.3, -0.18], s: [0.52, 0.42, 0.6] });
+  const px = cx + 0.15;
+  const pz = 0.22;
+  const jy = roofY + 0.78;
+  steel.push({ p: [px, roofY + 0.42, pz], s: [0.2, 0.72, 0.2] });
+  // jib reaches away from the pad so the climbing stack never crosses it
+  const j0 = px - 2.3;
+  const j1 = px + 0.95;
+  for (const dy of [0, 0.22])
+    for (const dz of [-0.07, 0.07]) steel.push({ p: [(j0 + j1) / 2, jy + dy, pz + dz], s: [j1 - j0, 0.035, 0.035] });
+  for (let x = j0; x < j1 - 0.01; x += 0.25)
+    for (const dz of [-0.07, 0.07]) steel.push(strut([x, jy, pz + dz], [x + 0.25, jy + 0.22, pz + dz], 0.018));
+  steel.push({ p: [px, jy + 0.5, pz], s: [0.06, 0.6, 0.06] });
+  steel.push(strut([px, jy + 0.8, pz], [j1 - 0.1, jy + 0.22, pz], 0.012));
+  steel.push(strut([px, jy + 0.8, pz], [j0 + 0.1, jy + 0.22, pz], 0.012));
+  decks.push({ p: [j1 - 0.18, jy - 0.06, pz], s: [0.34, 0.3, 0.3] });
+  clad.push({ p: [px - 0.22, jy - 0.16, pz + 0.17], s: [0.2, 0.18, 0.18] });
+  steel.push({ p: [j0 + 0.2, jy - 0.55, pz], s: [0.008, 1.1, 0.008] });
+  decks.push({ p: [j0 + 0.2, jy - 1.12, pz], s: [0.07, 0.09, 0.07] });
+
+  // lightning mast base: four legs converging on the mast foot
+  for (const sx of [-1, 1])
+    for (const szz of [-1, 1]) steel.push(strut([cx + sx * 0.32, roofY + 0.1, szz * 0.32], [cx, roofY + MAST_FOOT, 0], 0.04));
+  for (const [yy, r] of [[roofY + 0.4, 0.22], [roofY + 0.7, 0.12]] as const) {
+    for (const dz of [-r, r]) steel.push({ p: [cx, yy, dz], s: [2 * r, 0.02, 0.02] });
+    for (const dx of [-r, r]) steel.push({ p: [cx + dx, yy, 0], s: [0.02, 0.02, 2 * r] });
+  }
+
   // vertical propellant / water feed lines running up the pad-side face
-  const pipes = [-0.32, -0.2, 0.28].map((dz, i) => {
-    const len = h - 0.6 - i * 0.9;
-    const g = new THREE.CylinderGeometry(0.028, 0.028, len, 8);
-    g.translate(cx + half + 0.05, y0 + len / 2, dz);
+  const pipes = (
+    [
+      [cx + half + 0.05, -0.32, 0.028, h - 0.6],
+      [cx + half + 0.05, -0.2, 0.028, h - 1.5],
+      [cx + half + 0.05, 0.28, 0.028, h - 2.4],
+      [cx + half + 0.1, 0.42, 0.048, h * 0.62],
+      [cx - half - 0.05, half - 0.12, 0.034, h - 0.2],
+    ] as const
+  ).map(([x, z, r, len]) => {
+    const g = new THREE.CylinderGeometry(r, r, len, 8);
+    g.translate(x, y0 + len / 2, z);
     return g;
   });
-  return { steel: mergeBeams(steel), decks: mergeBeams(decks), pipes: mergeGeometries(pipes)! };
+
+  // red obstruction lights: roof corners, crane tip, mast top
+  const lightPts: [number, number, number][] = [
+    [cx - half - 0.08, roofY + 0.14, -half - 0.08],
+    [cx + half + 0.08, roofY + 0.14, -half - 0.08],
+    [cx - half - 0.08, roofY + 0.14, half + 0.08],
+    [cx + half + 0.08, roofY + 0.14, half + 0.08],
+    [j0, jy + 0.26, pz],
+    [cx, MAST_TOP + 0.14, 0],
+  ];
+  const lights = mergeGeometries(
+    lightPts.map((p) => new THREE.SphereGeometry(0.035, 8, 6).translate(...p)),
+  )!;
+
+  // slidewires down to the landing zone west of the pad
+  const wirePts: THREE.Vector3[] = [];
+  slideStarts.forEach((s, i) => {
+    const end = new THREE.Vector3(cx - 26, GROUND_Y + 0.25, 4 + i * 0.6);
+    for (let k = 0; k <= 16; k++) {
+      const t = k / 16;
+      const p = s.clone().lerp(end, t);
+      p.y -= Math.sin(t * Math.PI) * 0.9;
+      wirePts.push(p);
+      if (k > 0 && k < 16) wirePts.push(p.clone());
+    }
+  });
+
+  return {
+    steel: mergeBeams(steel, 0.22),
+    decks: mergeBeams(decks, 0.14),
+    clad: mergeBeams(clad, 0.16),
+    pipes: mergeGeometries(pipes)!,
+    lights,
+    slidewires: new THREE.BufferGeometry().setFromPoints(wirePts),
+  };
 }
 
 /** Steel framing on the rotating service structure's outer face. */
@@ -462,7 +632,7 @@ export function LaunchPad({ trees = 600 }: { trees?: number }) {
   const accessArm = useRef<THREE.Group>(null);
 
   const catenary = useMemo(() => {
-    const top = new THREE.Vector3(TOWER_X, TOWER_TOP + 2.3, 0);
+    const top = new THREE.Vector3(TOWER_X, MAST_TOP, 0);
     const pts: THREE.Vector3[] = [];
     for (const end of [new THREE.Vector3(TOWER_X - 9, GROUND_Y, 7), new THREE.Vector3(TOWER_X + 9, GROUND_Y, -7)]) {
       for (let i = 0; i <= 24; i++) {
@@ -599,21 +769,30 @@ export function LaunchPad({ trees = 600 }: { trees?: number }) {
 
       {/* Fixed service structure */}
       <mesh geometry={tower.steel} castShadow>
-        {steel}
+        <meshStandardMaterial color="#a3a6a8" roughness={0.6} metalness={0.5} vertexColors />
       </mesh>
       <mesh geometry={tower.decks} castShadow receiveShadow>
-        {grey}
+        <meshStandardMaterial color="#7f8387" roughness={0.65} metalness={0.4} vertexColors />
+      </mesh>
+      <mesh geometry={tower.clad} castShadow receiveShadow>
+        <meshStandardMaterial map={tex.rss} color="#d2d0c8" roughness={0.75} metalness={0.15} vertexColors />
       </mesh>
       <mesh geometry={tower.pipes} castShadow>
         {white}
       </mesh>
+      <mesh geometry={tower.lights}>
+        <meshStandardMaterial color="#5a0b06" emissive="#ff2a1a" emissiveIntensity={2.2} />
+      </mesh>
+      <lineSegments geometry={tower.slidewires}>
+        <lineBasicMaterial color="#4d5054" transparent opacity={0.55} />
+      </lineSegments>
       {/* Lightning mast + catenary wires */}
-      <mesh position={[TOWER_X, TOWER_TOP + 1.3, 0]} castShadow>
-        <cylinderGeometry args={[0.03, 0.08, 2.0, 10]} />
+      <mesh position={[TOWER_X, (TOWER_TOP + MAST_FOOT + MAST_TOP) / 2, 0]} castShadow>
+        <cylinderGeometry args={[0.028, 0.075, MAST_TOP - TOWER_TOP - MAST_FOOT, 10]} />
         <meshStandardMaterial color="#e8e6e1" roughness={0.5} />
       </mesh>
-      <mesh position={[TOWER_X, TOWER_TOP + 2.35, 0]}>
-        <coneGeometry args={[0.045, 0.14, 10]} />
+      <mesh position={[TOWER_X, MAST_TOP + 0.05, 0]}>
+        <coneGeometry args={[0.04, 0.14, 10]} />
         <meshStandardMaterial color="#c9c7c2" />
       </mesh>
       <lineSegments geometry={catenary}>

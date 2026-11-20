@@ -22,3 +22,4 @@
 - [x] Launch uses full (high) detail on every device, phones included
 - [x] Match the OnoNITE-CLc broadcast view: distant long-lens camera, deep blue ocean horizon behind the pad, natural-toned buildings, foreground scrub
 - [x] Hyper-realistic background: real photographed cloudy sky behind pad and climb, leafier trees
+- [x] Make the launch tower taller with realistic structural detail (levels, cladding, stairs, crane, lightning mast, slidewires) like the reference video
